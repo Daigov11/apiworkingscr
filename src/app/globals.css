@@ -24,3 +24,145 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+/* =========================
+   ApiWorking CMR - Header v1
+   ========================= */
+
+.awcmr-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: #0b0b0b;
+  border-bottom: 1px solid #1f1f1f;
+}
+
+.awcmr-header__inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.awcmr-header__logo {
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  text-decoration: none;
+  color: #fff;
+  font-size: 18px;
+}
+
+.awcmr-header__nav,
+.awcmr-header__actions {
+  display: none;
+  align-items: center;
+  gap: 14px;
+}
+
+.awcmr-header__link {
+  text-decoration: none;
+  color: #d4d4d4;
+  font-size: 14px;
+}
+
+.awcmr-header__btnPrimary {
+  text-decoration: none;
+  background: #ffffff;
+  color: #000000;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  display: inline-block;
+}
+
+.awcmr-header__burger {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 5px;
+  background: transparent;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.awcmr-header__burgerLine {
+  width: 18px;
+  height: 2px;
+  background: #ffffff;
+  display: block;
+  border-radius: 999px;
+}
+
+/* Mobile panel */
+.awcmr-header__mobilePanel {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 16px;
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 180ms ease;
+  border-top: 1px solid #1f1f1f;
+}
+
+.awcmr-header__mobilePanel.is-open {
+  max-height: 320px;
+}
+
+.awcmr-header__mobileInner {
+  padding: 14px 0 18px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.awcmr-header__mobileLink {
+  text-decoration: none;
+  color: #d4d4d4;
+  font-size: 14px;
+  padding: 10px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid #1f1f1f;
+}
+
+.awcmr-header__mobileBtn {
+  text-decoration: none;
+  background: #ffffff;
+  color: #000000;
+  font-weight: 800;
+  border-radius: 10px;
+  padding: 12px 12px;
+  font-size: 14px;
+  display: inline-block;
+  text-align: center;
+  margin-top: 6px;
+}
+
+.awcmr-header__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  border: 0;
+  padding: 0;
+  margin: 0;
+  z-index: 40;
+  cursor: pointer;
+}
+
+/* Desktop */
+@media (min-width: 768px) {
+  .awcmr-header__nav,
+  .awcmr-header__actions {
+    display: flex;
+  }
+
+  .awcmr-header__burger,
+  .awcmr-header__mobilePanel,
+  .awcmr-header__backdrop {
+    display: none;
+  }
+}
