@@ -1,10 +1,8 @@
-import type { PageSection } from "@/libs/types/cms";
-
-export default function TextSection({ data }: Extract<PageSection, { type: "text" }>["data"]) {
+export default function TextSection({ data }: { data: { title?: string; text: string } }) {
   return (
     <section style={{ padding: 24 }}>
-      {data.title ? <h2>{data.title}</h2> : null}
-      <p>{data.text}</p>
+      {data.title ? <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 8 }}>{data.title}</h2> : null}
+      <p style={{ color: "#d4d4d4" }}>{data.text}</p>
     </section>
   );
 }

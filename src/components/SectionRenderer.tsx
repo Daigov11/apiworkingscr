@@ -1,20 +1,18 @@
-import type { PageSection } from "@/libs/types/cms";
-import HeroSection from "@/components/sections/HeroSection";
-import TextSection from "@/components/sections/TextSection";
-import ImageTextSection from "@/components/sections/ImageTextSection";
-import ReviewsSection from "@/components/sections/ReviewsSection";
+import type { SectionInstance } from "@/lib/builder/types";
+import { validateSection } from "@/lib/builder/registry";
 
-export default function SectionRenderer({ section }: { section: PageSection }) {
-  switch (section.type) {
-    case "hero":
-      return <HeroSection data={section.data} />;
-    case "text":
-      return <TextSection data={section.data} />;
-    case "imageText":
-      return <ImageTextSection data={section.data} />;
-    case "reviews":
-      return <ReviewsSection data={section.data} />;
-    default:
-      return null;
+export default function SectionRenderer({ section }: { section: SectionInstance }) {
+  const result = validateSection(section);
+
+  if (!result.ok) {
+    // En producción podrías ocultarlo; en dev conviene verlo
+    return (
+      <section style={{ padding: 16, border: "1px solid #331", margin: 16, borderRadius: 12 }}>
+        <strong>Sección inválida:</strong> {section.type} ({result.error})
+      </section>
+    );
   }
+
+  const Comp = result.def.Component;
+  return <Comp data={result.data} />;
 }
