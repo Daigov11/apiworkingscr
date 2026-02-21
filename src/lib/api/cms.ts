@@ -1,12 +1,15 @@
 import { cache } from "react";
-import type { PagePayload } from "@/lib/types/cms";
+import type { PagePayload } from "@/lib/builder/types";
 
 export const getPageBySlug = cache(async (slug: string): Promise<PagePayload | null> => {
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+  let baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
   if (!baseUrl) throw new Error("Falta NEXT_PUBLIC_API_BASE_URL en .env.local");
 
-  const res = await fetch(`${baseUrl}/pages/${encodeURIComponent(slug)}`, {
-    cache: "no-store", // SSR fresco
+  baseUrl = baseUrl.replace(/\/+$/, "");
+  const url = `${baseUrl}/pages/${encodeURIComponent(slug)}`;
+
+  const res = await fetch(url, {
+    cache: "no-store",
     headers: { Accept: "application/json" },
   });
 

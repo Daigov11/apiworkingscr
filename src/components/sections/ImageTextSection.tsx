@@ -1,17 +1,21 @@
-export default function ImageTextSection({ data }: { data: { title?: string; text: string; imageUrl: string; imageAlt?: string; reverse?: boolean } }) {
-  const cols = data.reverse ? "1fr 1.2fr" : "1.2fr 1fr";
-  const orderImg = data.reverse ? 2 : 1;
-  const orderText = data.reverse ? 1 : 2;
+export default function ImageTextSection({
+  data,
+}: {
+  data: { title?: string; text: string; imageUrl: string; imageAlt?: string; reverse?: boolean };
+}) {
+  const reverse = !!data.reverse;
 
   return (
-    <section style={{ padding: 24, display: "grid", gap: 16, gridTemplateColumns: cols, alignItems: "center" }}>
-      <div style={{ order: orderText }}>
-        {data.title ? <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 8 }}>{data.title}</h2> : null}
-        <p style={{ color: "#d4d4d4" }}>{data.text}</p>
-      </div>
+    <section className="py-10">
+      <div className="grid gap-6 md:grid-cols-2 md:items-center">
+        <div className={reverse ? "md:order-2" : ""}>
+          <img src={data.imageUrl} alt={data.imageAlt ?? ""} className="h-auto w-full rounded-3xl border border-neutral-800" />
+        </div>
 
-      <div style={{ order: orderImg }}>
-        <img src={data.imageUrl} alt={data.imageAlt ?? ""} style={{ width: "100%", height: "auto", borderRadius: 16, border: "1px solid #1f1f1f" }} />
+        <div className={reverse ? "md:order-1" : ""}>
+          {data.title ? <h2 className="text-2xl font-extrabold">{data.title}</h2> : null}
+          <p className="mt-3 text-neutral-300">{data.text}</p>
+        </div>
       </div>
     </section>
   );

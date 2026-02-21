@@ -1,18 +1,33 @@
+"use client";
+
 import type { SectionInstance } from "@/lib/builder/types";
-import { validateSection } from "@/lib/builder/registry";
+import { schemaByType } from "@/lib/builder/registry";
+import { componentByType } from "@/lib/builder/componentRegistry";
 
 export default function SectionRenderer({ section }: { section: SectionInstance }) {
-  const result = validateSection(section);
+  const schema = schemaByType[section.type];
+  const Comp = componentByType[section.type];
 
-  if (!result.ok) {
-    // En producción podrías ocultarlo; en dev conviene verlo
+  if (!schema || !Comp) {
     return (
-      <section style={{ padding: 16, border: "1px solid #331", margin: 16, borderRadius: 12 }}>
-        <strong>Sección inválida:</strong> {section.type} ({result.error})
+      <section className="py-6">
+        <div className="rounded-2xl border border-red-900/40 bg-red-950/20 p-4 text-sm text-red-200">
+          <strong>Sección inválida:</strong> {section.type} (UNKNOWN_TYPE)
+        </div>
       </section>
     );
   }
 
-  const Comp = result.def.Component;
-  return <Comp data={result.data} />;
+  const parsed = schema.safeParse(section.data);
+  if (!parsed.success) {
+    return (
+      <section className="py-6">
+        <div className="rounded-2xl border border-red-900/40 bg-red-950/20 p-4 text-sm text-red-200">
+          <strong>Data inválida:</strong> {section.type}
+        </div>
+      </section>
+    );
+  }
+
+  return <Comp data={parsed.data} />;
 }

@@ -1,25 +1,22 @@
 import { z } from "zod";
-import type { SectionDef, SectionInstance } from "./types";
 
-import HeroSection from "@/components/sections/HeroSection";
-import TextSection from "@/components/sections/TextSection";
-import ImageTextSection from "@/components/sections/ImageTextSection";
-import VideoTextSection from "@/components/sections/VideoTextSection";
+/* =========================
+   Schemas (Zod)
+   ========================= */
 
-// ✅ Define schemas por módulo (esto será oro para el admin)
-const heroSchema = z.object({
+export const heroSchema = z.object({
   title: z.string().min(1),
   subtitle: z.string().optional(),
   ctaText: z.string().optional(),
   ctaHref: z.string().optional(),
 });
 
-const textSchema = z.object({
+export const textSchema = z.object({
   title: z.string().optional(),
   text: z.string().min(1),
 });
 
-const imageTextSchema = z.object({
+export const imageTextSchema = z.object({
   title: z.string().optional(),
   text: z.string().min(1),
   imageUrl: z.string().min(1),
@@ -27,82 +24,138 @@ const imageTextSchema = z.object({
   reverse: z.boolean().optional(),
 });
 
-const videoTextSchema = z.object({
+export const videoTextSchema = z.object({
   title: z.string().optional(),
   text: z.string().min(1),
   videoUrl: z.string().min(1),
   reverse: z.boolean().optional(),
 });
 
-export const sectionRegistry = {
-  hero: {
-    type: "hero",
-    label: "Hero",
-    schema: heroSchema,
-    defaults: () => ({ title: "Título", subtitle: "Subtítulo", ctaText: "Solicitar demo", ctaHref: "/demo" }),
-    fields: [
-      { name: "title", label: "Título", kind: "text" },
-      { name: "subtitle", label: "Subtítulo", kind: "textarea" },
-      { name: "ctaText", label: "Texto botón", kind: "text" },
-      { name: "ctaHref", label: "Link botón", kind: "url" },
-    ],
-    Component: HeroSection,
-  } satisfies SectionDef<z.infer<typeof heroSchema>>,
+export const featuresSchema = z.object({
+  title: z.string().optional(),
+  subtitle: z.string().optional(),
+  items: z
+    .array(
+      z.object({
+        title: z.string().min(1),
+        text: z.string().min(1),
+        icon: z.string().optional(),
+      })
+    )
+    .min(1),
+});
 
-  text: {
-    type: "text",
-    label: "Texto",
-    schema: textSchema,
-    defaults: () => ({ title: "Título", text: "Escribe aquí..." }),
-    fields: [
-      { name: "title", label: "Título", kind: "text" },
-      { name: "text", label: "Contenido", kind: "textarea" },
-    ],
-    Component: TextSection,
-  } satisfies SectionDef<z.infer<typeof textSchema>>,
+export const statsSchema = z.object({
+  title: z.string().optional(),
+  items: z
+    .array(
+      z.object({
+        value: z.string().min(1),
+        label: z.string().min(1),
+      })
+    )
+    .min(1),
+});
 
-  imageText: {
-    type: "imageText",
-    label: "Imagen + Texto",
-    schema: imageTextSchema,
-    defaults: () => ({ title: "Título", text: "Texto...", imageUrl: "https://picsum.photos/800/600", imageAlt: "Imagen", reverse: false }),
-    fields: [
-      { name: "title", label: "Título", kind: "text" },
-      { name: "text", label: "Texto", kind: "textarea" },
-      { name: "imageUrl", label: "URL imagen", kind: "image" },
-      { name: "imageAlt", label: "Alt", kind: "text" },
-      { name: "reverse", label: "Invertir columnas", kind: "switch" },
-    ],
-    Component: ImageTextSection,
-  } satisfies SectionDef<z.infer<typeof imageTextSchema>>,
+export const logosSchema = z.object({
+  title: z.string().optional(),
+  logos: z
+    .array(
+      z.object({
+        imageUrl: z.string().min(1),
+        alt: z.string().optional(),
+        href: z.string().optional(),
+      })
+    )
+    .min(1),
+});
 
-  videoText: {
-    type: "videoText",
-    label: "Video + Texto",
-    schema: videoTextSchema,
-    defaults: () => ({ title: "Título", text: "Texto...", videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ", reverse: false }),
-    fields: [
-      { name: "title", label: "Título", kind: "text" },
-      { name: "text", label: "Texto", kind: "textarea" },
-      { name: "videoUrl", label: "URL video embed", kind: "url" },
-      { name: "reverse", label: "Invertir columnas", kind: "switch" },
-    ],
-    Component: VideoTextSection,
-  } satisfies SectionDef<z.infer<typeof videoTextSchema>>,
+export const faqSchema = z.object({
+  title: z.string().optional(),
+  items: z
+    .array(
+      z.object({
+        question: z.string().min(1),
+        answer: z.string().min(1),
+      })
+    )
+    .min(1),
+});
+
+export const testimonialsSchema = z.object({
+  title: z.string().optional(),
+  items: z
+    .array(
+      z.object({
+        name: z.string().min(1),
+        role: z.string().optional(),
+        text: z.string().min(1),
+        avatarUrl: z.string().optional(),
+      })
+    )
+    .min(1),
+});
+
+export const ctaSchema = z.object({
+  title: z.string().min(1),
+  text: z.string().optional(),
+  ctaText: z.string().min(1),
+  ctaHref: z.string().min(1),
+});
+
+export const dividerSchema = z.object({
+  label: z.string().optional(),
+});
+
+export const spacerSchema = z.object({
+  size: z.number().min(0).max(200),
+});
+
+export const pricingSchema = z.object({
+  title: z.string().optional(),
+  subtitle: z.string().optional(),
+  plans: z
+    .array(
+      z.object({
+        name: z.string().min(1),
+        price: z.string().min(1),
+        period: z.string().optional(),
+        features: z.array(z.string()).default([]),
+        ctaText: z.string().optional(),
+        ctaHref: z.string().optional(),
+        highlighted: z.boolean().optional(),
+      })
+    )
+    .min(1),
+});
+
+export const carouselSchema = z.object({
+  title: z.string().optional(),
+  items: z
+    .array(
+      z.object({
+        imageUrl: z.string().min(1),
+        alt: z.string().optional(),
+        caption: z.string().optional(),
+        href: z.string().optional(),
+      })
+    )
+    .min(1),
+});
+
+export const schemaByType: Record<string, z.ZodTypeAny> = {
+  hero: heroSchema,
+  text: textSchema,
+  imageText: imageTextSchema,
+  videoText: videoTextSchema,
+  features: featuresSchema,
+  stats: statsSchema,
+  logos: logosSchema,
+  faq: faqSchema,
+  testimonials: testimonialsSchema,
+  cta: ctaSchema,
+  divider: dividerSchema,
+  spacer: spacerSchema,
+  pricing: pricingSchema,
+  carousel: carouselSchema,
 };
-
-export type RegistryKey = keyof typeof sectionRegistry;
-
-export function getSectionDef(type: string) {
-  return (sectionRegistry as Record<string, any>)[type] as SectionDef<any> | undefined;
-}
-
-export function validateSection(section: SectionInstance) {
-  const def = getSectionDef(section.type);
-  if (!def) return { ok: false as const, error: "UNKNOWN_TYPE" as const };
-
-  const parsed = def.schema.safeParse(section.data);
-  if (!parsed.success) return { ok: false as const, error: "INVALID_DATA" as const, issues: parsed.error.issues };
-
-  return { ok: true as const, def, data: parsed.data };
-}
