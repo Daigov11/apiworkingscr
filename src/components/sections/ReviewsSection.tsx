@@ -1,11 +1,11 @@
-import type { PageSection } from "@/libs/types/cms";
+import type { PageSection } from "@/lib/types/cms";
 
-export default function ReviewsSection({ data }: Extract<PageSection, { type: "reviews" }>["data"]) {
+export default function ReviewsSection({ title, items }: Extract<PageSection, { type: "reviews" }>["data"]) {
   return (
     <section style={{ padding: 24 }}>
-      {data.title ? <h2>{data.title}</h2> : null}
+      {title ? <h2>{title}</h2> : null}
       <ul>
-        {data.items.map((r, idx) => (
+        {items.map((r, idx) => (
           <li key={idx}>
             <strong>{r.name}:</strong> {r.text}
           </li>
