@@ -15,6 +15,10 @@ COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Variables NEXT_PUBLIC_* deben estar en build-time (se incrustan en el bundle)
+ARG NEXT_PUBLIC_API_BASE_URL
+ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
+
 RUN npm run build
 
 # Stage 3: Runner
