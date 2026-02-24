@@ -1,5 +1,3 @@
-"use client";
-
 import type { SectionInstance } from "@/lib/builder/types";
 import { schemaByType } from "@/lib/builder/registry";
 import { componentByType } from "@/lib/builder/componentRegistry";
