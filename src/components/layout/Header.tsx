@@ -31,7 +31,7 @@ export default function Header() {
         </nav>
 
         <div className="awcmr-header__actions">
-          <a href="/demo" className="awcmr-header__btnPrimary">Solicitar demo</a>
+          <a href="/demo" className="awcmr-header__btnPrimary">Solicitar demo V1</a>
         </div>
 
         <button
