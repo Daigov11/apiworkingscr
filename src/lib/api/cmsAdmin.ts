@@ -36,36 +36,48 @@ export function getToken(): string | null {
   return localStorage.getItem("awcmr_token");
 }
 
-function authHeaders() {
-  const token = getToken();
-  return token ? { Authorization: `Bearer ${token}` } : {};
+function buildHeaders(initHeaders?: HeadersInit, withAuth: boolean = true): Headers {
+  const h = new Headers(initHeaders);
+  // default accept si no existe
+  if (!h.has("accept")) h.set("accept", "*/*");
+
+  if (withAuth) {
+    const token = getToken();
+    if (token) h.set("Authorization", `Bearer ${token}`);
+  }
+
+  return h;
 }
 
-async function callApi<T>(path: string, init?: RequestInit): Promise<T> {
+async function callApi<T>(path: string, init?: RequestInit, withAuth: boolean = true): Promise<T> {
+  const headers = buildHeaders(init?.headers, withAuth);
+
   const res = await fetch(path, {
     ...init,
-    headers: {
-      ...(init?.headers || {}),
-      ...authHeaders(),
-    },
+    headers, // ✅ HeadersInit correcto (no spread raro)
   });
 
   const json = (await res.json()) as ApiResponse<T>;
+
   if (!res.ok) throw new Error(json?.message || `HTTP ${res.status}`);
   if (json.codResponse !== "1") throw new Error(json.message || "Error API");
+
   return json.data;
 }
 
-/** Login */
+/** Login (NO auth header) */
 export async function loginCMS(usuario: string, password: string) {
+  // esta ruta es tu proxy next: /api/admin/loginCMS
   const res = await fetch("/api/admin/loginCMS", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: buildHeaders({ "Content-Type": "application/json" }, false),
     body: JSON.stringify({ usuario, password }),
   });
 
   const json = await res.json();
+
   if (!res.ok || json.codResponse !== "1") throw new Error(json.message || "Login falló");
+
   return json.data as {
     id: string;
     email: string;
@@ -79,8 +91,8 @@ export async function loginCMS(usuario: string, password: string) {
 /** Pages list */
 export async function adminListPages(args: { search?: string; status?: string; page?: number; pageSize?: number }) {
   const q = new URLSearchParams();
-  if (args.search) q.set("search", args.search);
-  if (args.status) q.set("status", args.status);
+  q.set("search", args.search ?? "");
+  q.set("status", args.status ?? "");
   q.set("page", String(args.page ?? 1));
   q.set("pageSize", String(args.pageSize ?? 20));
 
@@ -98,7 +110,7 @@ export async function adminGetPage(id: number) {
 export async function adminCreatePage(payload: any) {
   return callApi<{ id: number }>(`/api/admin/pages`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: buildHeaders({ "Content-Type": "application/json" }), // auth + content-type
     body: JSON.stringify(payload),
   });
 }
@@ -107,7 +119,7 @@ export async function adminCreatePage(payload: any) {
 export async function adminUpdatePage(id: number, payload: any) {
   return callApi<{ id: number }>(`/api/admin/pages/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: buildHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify(payload),
   });
 }

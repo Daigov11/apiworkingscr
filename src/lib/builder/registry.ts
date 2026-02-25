@@ -143,6 +143,10 @@ export const carouselSchema = z.object({
     .min(1),
 });
 
+/* =========================
+   Public mapping (IMPORTANT)
+   ========================= */
+
 export const schemaByType: Record<string, z.ZodTypeAny> = {
   hero: heroSchema,
   text: textSchema,

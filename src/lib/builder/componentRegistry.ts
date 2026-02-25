@@ -1,8 +1,3 @@
-"use client";
-
-import dynamic from "next/dynamic";
-import CarouselSkeleton from "@/components/sections/CarouselSkeleton";
-
 import HeroSection from "@/components/sections/HeroSection";
 import TextSection from "@/components/sections/TextSection";
 import ImageTextSection from "@/components/sections/ImageTextSection";
@@ -12,15 +7,11 @@ import StatsSection from "@/components/sections/StatsSection";
 import LogosSection from "@/components/sections/LogosSection";
 import FaqSection from "@/components/sections/FaqSection";
 import TestimonialsSection from "@/components/sections/TestimonialsSection";
-import CtaSection from "@/components/sections/CtaSection";
+import PricingSection from "@/components/sections/PricingSection";
 import DividerSection from "@/components/sections/DividerSection";
 import SpacerSection from "@/components/sections/SpacerSection";
-import PricingSection from "@/components/sections/PricingSection";
-
-const CarouselSection = dynamic(() => import("@/components/sections/CarouselSection"), {
-  ssr: false,
-  loading: CarouselSkeleton,
-});
+import CtaSection from "@/components/sections/CtaSection";
+import CarouselLazy from "@/components/sections/CarouselLazy";
 
 export const componentByType: Record<string, React.ComponentType<{ data: any }>> = {
   hero: HeroSection,
@@ -32,9 +23,11 @@ export const componentByType: Record<string, React.ComponentType<{ data: any }>>
   logos: LogosSection,
   faq: FaqSection,
   testimonials: TestimonialsSection,
-  cta: CtaSection,
+  pricing: PricingSection,
   divider: DividerSection,
   spacer: SpacerSection,
-  pricing: PricingSection,
-  carousel: CarouselSection,
+  cta: CtaSection,
+
+  // pesado: client lazy
+  carousel: CarouselLazy,
 };

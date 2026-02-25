@@ -13,7 +13,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/admin", "/api"], // ✅ no indexar panel ni endpoints
+        disallow: ["/admin", "/api", "preview"], // ✅ no indexar panel ni endpoints
       },
     ],
     sitemap: `${base}/sitemap.xml`,
