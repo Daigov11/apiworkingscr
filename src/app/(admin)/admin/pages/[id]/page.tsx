@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import SectionForm from "@/components/admin/SectionForm";
 import { adminDeletePage, adminGetPage, adminUpdatePage } from "@/lib/api/cmsAdmin";
@@ -24,12 +24,104 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { restrictToVerticalAxis, restrictToParentElement } from "@dnd-kit/modifiers";
+type SeoLevel = "good" | "warn" | "bad";
 
+function seoPill(level: SeoLevel) {
+  if (level === "good") return "bg-green-900/40 text-green-200 border-green-900/40";
+  if (level === "warn") return "bg-yellow-900/40 text-yellow-200 border-yellow-900/40";
+  return "bg-red-900/40 text-red-200 border-red-900/40";
+}
+
+function SeoBadge({ level, text }: { level: SeoLevel; text: string }) {
+  return (
+    <span className={`inline-flex items-center gap-2 rounded-full border px-2 py-1 text-xs ${seoPill(level)}`}>
+      <span className="text-base leading-none">●</span>
+      <span>{text}</span>
+    </span>
+  );
+}
+
+function normalizeSlugHint(slug: string) {
+  const s = (slug || "").trim();
+  const lower = s.toLowerCase();
+  const clean = lower
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return clean;
+}
+
+function titleSeo(metaTitle: string) {
+  const len = (metaTitle || "").trim().length;
+
+  if (len === 0) return { level: "bad" as SeoLevel, msg: "Falta metaTitle" };
+  if (len > 70) return { level: "bad" as SeoLevel, msg: `Muy largo (${len}) — ideal 45–60` };
+  if (len < 30) return { level: "bad" as SeoLevel, msg: `Muy corto (${len}) — ideal 45–60` };
+  if (len < 45) return { level: "warn" as SeoLevel, msg: `Aceptable (${len}) — ideal 45–60` };
+  if (len > 60) return { level: "warn" as SeoLevel, msg: `Un poco largo (${len}) — ideal 45–60` };
+  return { level: "good" as SeoLevel, msg: `Perfecto (${len})` };
+}
+
+function descSeo(metaDescription: string) {
+  const len = (metaDescription || "").trim().length;
+
+  if (len === 0) return { level: "bad" as SeoLevel, msg: "Falta metaDescription" };
+  if (len > 200) return { level: "bad" as SeoLevel, msg: `Muy larga (${len}) — ideal 140–160` };
+  if (len < 110) return { level: "bad" as SeoLevel, msg: `Muy corta (${len}) — ideal 140–160` };
+  if (len < 140) return { level: "warn" as SeoLevel, msg: `Aceptable (${len}) — ideal 140–160` };
+  if (len > 160) return { level: "warn" as SeoLevel, msg: `Un poco larga (${len}) — ideal 140–160` };
+  return { level: "good" as SeoLevel, msg: `Perfecta (${len})` };
+}
+
+function slugSeo(slug: string) {
+  const raw = (slug || "").trim();
+  const clean = normalizeSlugHint(raw);
+
+  if (!raw) return { level: "bad" as SeoLevel, msg: "Falta slug" };
+
+  const invalidChars = /[^a-zA-Z0-9-_ ]/.test(raw);
+  const hasSpaces = /\s/.test(raw);
+  const hasUpper = /[A-Z]/.test(raw);
+  const hasUnderscore = /_/.test(raw);
+  const hasDoubleDash = /--/.test(raw);
+  const startsEndsDash = /^-|-$/g.test(raw);
+  const len = clean.length;
+
+  // regla final “ideal”: solo a-z0-9 y guiones
+  const okRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(clean);
+
+  if (invalidChars) return { level: "bad" as SeoLevel, msg: "Tiene caracteres raros" };
+  if (hasSpaces) return { level: "bad" as SeoLevel, msg: "Tiene espacios (usa guiones)" };
+
+  if (!okRegex) return { level: "warn" as SeoLevel, msg: `Se normalizará a: ${clean || "—"}` };
+  if (len < 3) return { level: "warn" as SeoLevel, msg: `Muy corto (${len})` };
+  if (len > 80) return { level: "warn" as SeoLevel, msg: `Muy largo (${len})` };
+
+  if (hasUpper || hasUnderscore || hasDoubleDash || startsEndsDash) {
+    return { level: "warn" as SeoLevel, msg: `Recomendado: ${clean}` };
+  }
+
+  return { level: "good" as SeoLevel, msg: `OK (${len})` };
+}
+
+function ogSeo(ogImage: string) {
+  const v = (ogImage || "").trim();
+  if (!v) return { level: "warn" as SeoLevel, msg: "Opcional, pero recomendado (1200×630)" };
+  if (!/^https?:\/\//i.test(v)) return { level: "bad" as SeoLevel, msg: "Debe iniciar con http(s)://" };
+  return { level: "good" as SeoLevel, msg: "OK (ideal 1200×630)" };
+}
+
+function seoOverall(levels: SeoLevel[]) {
+  if (levels.includes("bad")) return "bad" as SeoLevel;
+  if (levels.includes("warn")) return "warn" as SeoLevel;
+  return "good" as SeoLevel;
+}
 type UiSection = {
   sectionKey: string;
   type: string;
   sortOrder: number;
-  dataJson: string; // JSON string
+  dataJson: string;
 };
 
 function safeJson(json: string) {
@@ -56,22 +148,18 @@ function validateSection(typeRaw: string, dataJson: string): string[] {
   if (type === "hero") {
     if (!isNonEmptyString((obj as any).title)) errs.push("Falta title");
   }
-
   if (type === "text") {
     if (!isNonEmptyString((obj as any).text)) errs.push("Falta text");
   }
-
   if (type === "cta") {
     if (!isNonEmptyString((obj as any).title)) errs.push("Falta title");
     if (!isNonEmptyString((obj as any).ctaText)) errs.push("Falta ctaText");
     if (!isNonEmptyString((obj as any).ctaHref)) errs.push("Falta ctaHref");
   }
-
   if (type === "imagetext") {
     if (!isNonEmptyString((obj as any).text)) errs.push("Falta text");
     if (!isNonEmptyString((obj as any).imageUrl)) errs.push("Falta imageUrl");
   }
-
   if (type === "videotext") {
     if (!isNonEmptyString((obj as any).text)) errs.push("Falta text");
     if (!isNonEmptyString((obj as any).videoUrl)) errs.push("Falta videoUrl");
@@ -157,6 +245,38 @@ function reindex(next: UiSection[]) {
 }
 
 /** ===========================
+ *  AUTOSAVE helpers
+ *  =========================== */
+function draftKey(pageId: number) {
+  return `awcmr_draft_page_${pageId}`;
+}
+
+function makeSnapshot(input: {
+  slug: string;
+  metaTitle: string;
+  metaDescription: string;
+  ogImage: string;
+  status: string;
+  sections: UiSection[];
+}) {
+  // Canonical: reindex + solo campos relevantes
+  const canonSections = reindex(input.sections).map((s) => ({
+    sectionKey: s.sectionKey,
+    type: s.type,
+    dataJson: s.dataJson ?? "{}",
+  }));
+
+  return JSON.stringify({
+    slug: input.slug || "",
+    metaTitle: input.metaTitle || "",
+    metaDescription: input.metaDescription || "",
+    ogImage: input.ogImage || "",
+    status: input.status || "draft",
+    sections: canonSections,
+  });
+}
+
+/** ===========================
  *  Sortable Card (DnD)
  *  =========================== */
 function SortableSectionCard(props: {
@@ -224,7 +344,7 @@ function SortableSectionCard(props: {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {/* ✅ Drag handle (best practice) */}
+          {/* ✅ Drag handle */}
           <button
             ref={setActivatorNodeRef}
             {...attributes}
@@ -237,7 +357,7 @@ function SortableSectionCard(props: {
             ⠿
           </button>
 
-          {/* opcional: mantener ↑ ↓ */}
+          {/* fallback ↑↓ */}
           <button className="rounded-lg border border-neutral-800 px-2 py-1 text-xs" onClick={onMoveUp} type="button">
             ↑
           </button>
@@ -293,11 +413,7 @@ function SortableSectionCard(props: {
         </div>
 
         <div className="md:col-span-2">
-          <SectionForm
-            type={section.type}
-            dataJson={section.dataJson}
-            onChangeDataJson={onChangeDataJson}
-          />
+          <SectionForm type={section.type} dataJson={section.dataJson} onChangeDataJson={onChangeDataJson} />
         </div>
       </div>
     </div>
@@ -322,6 +438,14 @@ export default function AdminPageEditor() {
 
   const [sections, setSections] = useState<UiSection[]>([]);
 
+  // ✅ Autosave/dirty
+  const [hasLocalDraft, setHasLocalDraft] = useState(false);
+  const [localDraftTs, setLocalDraftTs] = useState<number | null>(null);
+  const [lastAutosaveTs, setLastAutosaveTs] = useState<number | null>(null);
+
+  const serverSnapshotRef = useRef<string>(""); // último guardado “oficial” (server)
+  const [dirty, setDirty] = useState(false);
+
   const sectionTypes = useMemo(
     () => [
       "hero",
@@ -342,12 +466,13 @@ export default function AdminPageEditor() {
     []
   );
 
-  // ✅ DnD sensors (mouse/touch + teclado)
+  // ✅ DnD sensors
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
+  // Load
   useEffect(() => {
     if (!id || Number.isNaN(id)) {
       setErr("ID inválido.");
@@ -370,6 +495,33 @@ export default function AdminPageEditor() {
 
         const sorted = [...(data.sections || [])].sort((a, b) => a.sortOrder - b.sortOrder);
         setSections(sorted);
+
+        // snapshot base (server)
+        const snap = makeSnapshot({
+          slug: data.page.slug || "",
+          metaTitle: data.page.metaTitle || "",
+          metaDescription: data.page.metaDescription || "",
+          ogImage: data.page.ogImage || "",
+          status: data.page.status || "draft",
+          sections: sorted,
+        });
+
+        serverSnapshotRef.current = snap;
+        setDirty(false);
+
+        // verificar borrador local
+        if (typeof window !== "undefined") {
+          const raw = localStorage.getItem(draftKey(id));
+          if (raw) {
+            try {
+              const parsed = JSON.parse(raw);
+              if (parsed?.ts && parsed?.state) {
+                setHasLocalDraft(true);
+                setLocalDraftTs(Number(parsed.ts));
+              }
+            } catch {}
+          }
+        }
       } catch (e: any) {
         setErr(e.message || "Error cargando página");
       } finally {
@@ -377,6 +529,86 @@ export default function AdminPageEditor() {
       }
     })();
   }, [id]);
+
+  // Dirty recalculation (cuando cambia algo)
+  useEffect(() => {
+    if (loading) return;
+    const current = makeSnapshot({ slug, metaTitle, metaDescription, ogImage, status, sections });
+    setDirty(current !== serverSnapshotRef.current);
+  }, [slug, metaTitle, metaDescription, ogImage, status, sections, loading]);
+
+  // beforeunload (tab close/refresh)
+  useEffect(() => {
+    function handler(e: BeforeUnloadEvent) {
+      if (!dirty) return;
+      e.preventDefault();
+      e.returnValue = "";
+    }
+    if (dirty) window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [dirty]);
+
+  // Autosave localStorage cada 8s si hay cambios
+  useEffect(() => {
+    if (loading) return;
+
+    const interval = setInterval(() => {
+      if (!dirty) return;
+
+      try {
+        const state = {
+          slug,
+          metaTitle,
+          metaDescription,
+          ogImage,
+          status,
+          sections: reindex(sections),
+        };
+
+        localStorage.setItem(
+          draftKey(id),
+          JSON.stringify({ ts: Date.now(), state })
+        );
+
+        setHasLocalDraft(true);
+        setLocalDraftTs(Date.now());
+        setLastAutosaveTs(Date.now());
+      } catch {
+        // si localStorage falla, no rompemos
+      }
+    }, 8000);
+
+    return () => clearInterval(interval);
+  }, [dirty, slug, metaTitle, metaDescription, ogImage, status, sections, id, loading]);
+
+  function restoreLocalDraft() {
+    try {
+      const raw = localStorage.getItem(draftKey(id));
+      if (!raw) return;
+
+      const parsed = JSON.parse(raw);
+      const st = parsed?.state;
+      if (!st) return;
+
+      setSlug(st.slug || "");
+      setMetaTitle(st.metaTitle || "");
+      setMetaDescription(st.metaDescription || "");
+      setOgImage(st.ogImage || "");
+      setStatus(st.status || "draft");
+      setSections(Array.isArray(st.sections) ? st.sections : []);
+
+      setHasLocalDraft(true);
+      setLocalDraftTs(Number(parsed.ts) || Date.now());
+    } catch {}
+  }
+
+  function discardLocalDraft() {
+    try {
+      localStorage.removeItem(draftKey(id));
+    } catch {}
+    setHasLocalDraft(false);
+    setLocalDraftTs(null);
+  }
 
   function moveButtons(idx: number, dir: -1 | 1) {
     const target = idx + dir;
@@ -429,7 +661,6 @@ export default function AdminPageEditor() {
     setSections(next);
   }
 
-  // ✅ Drag end handler
   function onDragEnd(event: DragEndEvent) {
     const activeId = String(event.active.id);
     const overId = event.over ? String(event.over.id) : null;
@@ -470,6 +701,10 @@ export default function AdminPageEditor() {
         sections: reindex(sections),
       });
 
+      // actualizar snapshot oficial (server) y limpiar dirty
+      serverSnapshotRef.current = makeSnapshot({ slug, metaTitle, metaDescription, ogImage, status, sections });
+      setDirty(false);
+
       alert("Guardado OK");
       router.refresh();
     } catch (e: any) {
@@ -497,17 +732,46 @@ export default function AdminPageEditor() {
 
   const sectionIds = sections.map((s) => s.sectionKey);
 
+  const showDraftBanner = hasLocalDraft; // existe draft local
+
+  function fmtTs(ts: number | null) {
+    if (!ts) return "";
+    const d = new Date(ts);
+    return new Intl.DateTimeFormat("es-PE", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(d);
+  }
+
   return (
     <div>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-extrabold">Editar página (ID: {id})</h1>
-          <p className="mt-2 text-sm text-neutral-300">
-            Reordena secciones con drag & drop (handle ⠿). Guarda para persistir.
-          </p>
+
+          <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-neutral-300">
+            {dirty ? (
+              <span className="rounded-full bg-yellow-900/40 px-2 py-1 text-xs text-yellow-200">
+                ● Cambios sin guardar
+              </span>
+            ) : (
+              <span className="rounded-full bg-green-900/40 px-2 py-1 text-xs text-green-200">
+                Guardado
+              </span>
+            )}
+
+            {lastAutosaveTs ? (
+              <span className="text-xs text-neutral-400">
+                Autosave: {fmtTs(lastAutosaveTs)}
+              </span>
+            ) : null}
+          </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <a className="rounded-xl border border-neutral-800 px-3 py-2 text-sm hover:bg-neutral-900/40" href="/admin/pages">
             Volver
           </a>
@@ -519,9 +783,21 @@ export default function AdminPageEditor() {
             href={`/${slug.trim()}`}
             target="_blank"
             rel="noreferrer"
-            title={slug.trim() ? "Ver página pública" : "Primero define un slug"}
+            title={slug.trim() ? "Ver página pública (published)" : "Primero define un slug"}
           >
             Ver
+          </a>
+
+          <a
+            className={`rounded-xl border border-neutral-800 px-3 py-2 text-sm hover:bg-neutral-900/40 ${
+              slug.trim() ? "" : "pointer-events-none opacity-50"
+            }`}
+            href={`/preview/${slug.trim()}`}
+            target="_blank"
+            rel="noreferrer"
+            title={slug.trim() ? "Preview (draft) usando bridge" : "Primero define un slug"}
+          >
+            Preview
           </a>
 
           <button
@@ -543,6 +819,35 @@ export default function AdminPageEditor() {
         </div>
       </div>
 
+      {/* Banner borrador local */}
+      {showDraftBanner ? (
+        <div className="mt-4 rounded-2xl border border-neutral-800 bg-neutral-950/30 p-4">
+          <div className="text-sm text-neutral-200">
+            Hay un <strong>borrador local</strong> guardado{" "}
+            {localDraftTs ? <span className="text-neutral-400">(último: {fmtTs(localDraftTs)})</span> : null}.
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              className="rounded-xl border border-neutral-800 px-3 py-2 text-sm hover:bg-neutral-900/40"
+              type="button"
+              onClick={restoreLocalDraft}
+            >
+              Restaurar borrador local
+            </button>
+            <button
+              className="rounded-xl border border-red-900/40 bg-red-950/20 px-3 py-2 text-sm text-red-200 hover:bg-red-950/30"
+              type="button"
+              onClick={discardLocalDraft}
+            >
+              Descartar borrador local
+            </button>
+          </div>
+          <div className="mt-2 text-xs text-neutral-500">
+            Nota: el borrador local es solo en este navegador/PC.
+          </div>
+        </div>
+      ) : null}
+
       {err ? (
         <div className="mt-4 rounded-2xl border border-red-900/40 bg-red-950/20 p-4 text-sm text-red-200">
           {err}
@@ -553,6 +858,64 @@ export default function AdminPageEditor() {
       <div className="mt-6 grid gap-4 md:grid-cols-2">
         <div className="rounded-3xl border border-neutral-800 bg-neutral-950/30 p-5">
           <div className="text-sm font-extrabold text-neutral-200">Meta</div>
+          {/* ✅ SEO UI */}
+{(() => {
+  const t = titleSeo(metaTitle);
+  const d = descSeo(metaDescription);
+  const s = slugSeo(slug);
+  const o = ogSeo(ogImage);
+
+  const overall = seoOverall([t.level, d.level, s.level, o.level]);
+  const cleanSlug = normalizeSlugHint(slug || "");
+
+  // preview tipo Google
+  const previewTitle = (metaTitle || "").trim() || "Título de la página";
+  const previewDesc =
+    (metaDescription || "").trim() || "Aquí aparecerá tu descripción en Google (meta description).";
+  const previewUrl = `https://tu-dominio.pe/${cleanSlug || "slug"}`;
+
+  return (
+    <div className="mt-4 rounded-2xl border border-neutral-800 bg-black/20 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="text-sm font-extrabold text-neutral-200">SEO</div>
+        <SeoBadge
+          level={overall}
+          text={
+            overall === "good"
+              ? "Listo para publicar"
+              : overall === "warn"
+              ? "Publicable, pero mejorable"
+              : "No recomendado publicar"
+          }
+        />
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        <SeoBadge level={t.level} text={`Title: ${t.msg}`} />
+        <SeoBadge level={d.level} text={`Description: ${d.msg}`} />
+        <SeoBadge level={s.level} text={`Slug: ${s.msg}`} />
+        <SeoBadge level={o.level} text={`OG: ${o.msg}`} />
+      </div>
+
+      <div className="mt-4 rounded-2xl border border-neutral-800 bg-neutral-950/40 p-4">
+        <div className="text-xs text-neutral-500">Vista previa (Google)</div>
+        <div className="mt-2 text-lg font-semibold text-blue-300">{previewTitle}</div>
+        <div className="mt-1 text-xs text-green-300">{previewUrl}</div>
+        <div className="mt-2 text-sm text-neutral-200">{previewDesc}</div>
+      </div>
+
+      {slug && cleanSlug !== slug.trim() ? (
+        <div className="mt-3 text-xs text-yellow-200">
+          Recomendación: usa slug normalizado: <span className="font-bold">{cleanSlug}</span>
+        </div>
+      ) : null}
+
+      <div className="mt-2 text-xs text-neutral-500">
+        Tips: Title ideal **45–60** caracteres. Description ideal **140–160**. OG ideal **1200×630**.
+      </div>
+    </div>
+  );
+})()}
 
           <label className="mt-4 block text-xs text-neutral-400">Slug</label>
           <input
@@ -614,7 +977,7 @@ export default function AdminPageEditor() {
         </div>
       </div>
 
-      {/* Sections (DnD) */}
+      {/* Sections */}
       <div className="mt-6 rounded-3xl border border-neutral-800 bg-neutral-950/30 p-5">
         <div className="text-sm font-extrabold text-neutral-200">Secciones</div>
 
