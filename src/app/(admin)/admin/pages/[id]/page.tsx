@@ -5,6 +5,26 @@ import { useParams, useRouter } from "next/navigation";
 import SectionForm from "@/components/admin/SectionForm";
 import { adminDeletePage, adminGetPage, adminUpdatePage } from "@/lib/api/cmsAdmin";
 
+// ✅ DnD Kit
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  arrayMove,
+  verticalListSortingStrategy,
+  sortableKeyboardCoordinates,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { restrictToVerticalAxis, restrictToParentElement } from "@dnd-kit/modifiers";
+
 type UiSection = {
   sectionKey: string;
   type: string;
@@ -30,11 +50,9 @@ function validateSection(typeRaw: string, dataJson: string): string[] {
   const obj = safeJson(dataJson);
   if (obj === null) return ["JSON inválido"];
 
-  // helper arrays
   const arr = (v: any) => (Array.isArray(v) ? v : []);
   const errs: string[] = [];
 
-  // Validaciones “mínimas” (MVP)
   if (type === "hero") {
     if (!isNonEmptyString((obj as any).title)) errs.push("Falta title");
   }
@@ -117,7 +135,6 @@ function validateSection(typeRaw: string, dataJson: string): string[] {
     plans.forEach((p: any, i: number) => {
       if (!isNonEmptyString(p?.name)) errs.push(`plans[${i}].name falta`);
       if (!isNonEmptyString(p?.price)) errs.push(`plans[${i}].price falta`);
-      // features puede estar vacío, no es obligatorio
     });
   }
 
@@ -126,9 +143,165 @@ function validateSection(typeRaw: string, dataJson: string): string[] {
     if (typeof size !== "number") errs.push("size debe ser número");
   }
 
-  // divider no requiere nada
-
   return errs;
+}
+
+function uniqueSectionKey(base: string) {
+  const clean = (base || "sec").toLowerCase().replace(/[^a-z0-9_-]/g, "_");
+  const short = String(Date.now()).slice(-6);
+  return `${clean}_${short}`;
+}
+
+function reindex(next: UiSection[]) {
+  return next.map((s, i) => ({ ...s, sortOrder: i + 1 }));
+}
+
+/** ===========================
+ *  Sortable Card (DnD)
+ *  =========================== */
+function SortableSectionCard(props: {
+  section: UiSection;
+  index: number;
+  errors: string[];
+  sectionTypes: string[];
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onDuplicate: () => void;
+  onRemove: () => void;
+  onChangeType: (type: string) => void;
+  onChangeDataJson: (dataJson: string) => void;
+}) {
+  const {
+    section,
+    index,
+    errors,
+    sectionTypes,
+    onMoveUp,
+    onMoveDown,
+    onDuplicate,
+    onRemove,
+    onChangeType,
+    onChangeDataJson,
+  } = props;
+
+  const ok = errors.length === 0;
+
+  const {
+    setNodeRef,
+    setActivatorNodeRef,
+    attributes,
+    listeners,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: section.sectionKey });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={[
+        "rounded-2xl border border-neutral-800 bg-black/20 p-4",
+        isDragging ? "ring-2 ring-white/20" : "",
+      ].join(" ")}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="text-sm font-extrabold">
+          #{index + 1} — {section.sectionKey} — {section.type}{" "}
+          <span
+            className={`ml-2 rounded-full px-2 py-1 text-xs ${
+              ok ? "bg-green-900/40 text-green-200" : "bg-red-900/40 text-red-200"
+            }`}
+          >
+            {ok ? "OK" : `Errores: ${errors.length}`}
+          </span>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {/* ✅ Drag handle (best practice) */}
+          <button
+            ref={setActivatorNodeRef}
+            {...attributes}
+            {...listeners}
+            type="button"
+            className="cursor-grab active:cursor-grabbing rounded-lg border border-neutral-800 px-2 py-1 text-xs hover:bg-neutral-900/40"
+            title="Arrastrar para reordenar"
+            aria-label="Arrastrar"
+          >
+            ⠿
+          </button>
+
+          {/* opcional: mantener ↑ ↓ */}
+          <button className="rounded-lg border border-neutral-800 px-2 py-1 text-xs" onClick={onMoveUp} type="button">
+            ↑
+          </button>
+          <button className="rounded-lg border border-neutral-800 px-2 py-1 text-xs" onClick={onMoveDown} type="button">
+            ↓
+          </button>
+
+          <button
+            className="rounded-lg border border-neutral-800 px-2 py-1 text-xs hover:bg-neutral-900/40"
+            onClick={onDuplicate}
+            type="button"
+            title="Duplicar sección"
+          >
+            Duplicar
+          </button>
+
+          <button
+            className="rounded-lg border border-red-900/40 bg-red-950/20 px-2 py-1 text-xs text-red-200"
+            onClick={onRemove}
+            type="button"
+          >
+            Quitar
+          </button>
+        </div>
+      </div>
+
+      {!ok ? (
+        <div className="mt-2 rounded-xl border border-red-900/40 bg-red-950/10 p-3 text-xs text-red-200">
+          <div className="font-bold">Errores:</div>
+          <ul className="mt-1 list-disc pl-5">
+            {errors.slice(0, 6).map((e, i) => (
+              <li key={i}>{e}</li>
+            ))}
+          </ul>
+          {errors.length > 6 ? <div className="mt-1 text-red-300">… y {errors.length - 6} más</div> : null}
+        </div>
+      ) : null}
+
+      <div className="mt-3 grid gap-3 md:grid-cols-3">
+        <div>
+          <label className="text-xs text-neutral-400">Type</label>
+          <select
+            className="mt-2 w-full rounded-xl border border-neutral-800 bg-black/30 px-3 py-2 text-sm"
+            value={section.type}
+            onChange={(e) => onChangeType(e.target.value)}
+          >
+            {sectionTypes.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="md:col-span-2">
+          <SectionForm
+            type={section.type}
+            dataJson={section.dataJson}
+            onChangeDataJson={onChangeDataJson}
+          />
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function AdminPageEditor() {
@@ -169,6 +342,12 @@ export default function AdminPageEditor() {
     []
   );
 
+  // ✅ DnD sensors (mouse/touch + teclado)
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
   useEffect(() => {
     if (!id || Number.isNaN(id)) {
       setErr("ID inválido.");
@@ -199,11 +378,7 @@ export default function AdminPageEditor() {
     })();
   }, [id]);
 
-  function reindex(next: UiSection[]) {
-    return next.map((s, i) => ({ ...s, sortOrder: i + 1 }));
-  }
-
-  function move(idx: number, dir: -1 | 1) {
+  function moveButtons(idx: number, dir: -1 | 1) {
     const target = idx + dir;
     if (target < 0 || target >= sections.length) return;
     const next = [...sections];
@@ -211,12 +386,6 @@ export default function AdminPageEditor() {
     next[idx] = next[target];
     next[target] = tmp;
     setSections(reindex(next));
-  }
-
-  function uniqueSectionKey(base: string) {
-    const clean = (base || "sec").toLowerCase().replace(/[^a-z0-9_-]/g, "_");
-    const short = String(Date.now()).slice(-6);
-    return `${clean}_${short}`;
   }
 
   function addSection(type: string) {
@@ -245,7 +414,6 @@ export default function AdminPageEditor() {
       dataJson: current.dataJson || "{}",
     };
 
-    // insertar justo después
     const next = [...sections.slice(0, idx + 1), copy, ...sections.slice(idx + 1)];
     setSections(reindex(next));
   }
@@ -261,12 +429,25 @@ export default function AdminPageEditor() {
     setSections(next);
   }
 
+  // ✅ Drag end handler
+  function onDragEnd(event: DragEndEvent) {
+    const activeId = String(event.active.id);
+    const overId = event.over ? String(event.over.id) : null;
+    if (!overId || activeId === overId) return;
+
+    const oldIndex = sections.findIndex((s) => s.sectionKey === activeId);
+    const newIndex = sections.findIndex((s) => s.sectionKey === overId);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const moved = arrayMove(sections, oldIndex, newIndex);
+    setSections(reindex(moved));
+  }
+
   async function onSave() {
     try {
       setSaving(true);
       setErr(null);
 
-      // Validar JSON + reglas por módulo
       const allErrors: Array<{ idx: number; key: string; type: string; errors: string[] }> = [];
       sections.forEach((s, i) => {
         const errors = validateSection(s.type, s.dataJson);
@@ -276,9 +457,7 @@ export default function AdminPageEditor() {
       if (allErrors.length) {
         const first = allErrors[0];
         throw new Error(
-          `No se puede guardar. Errores en sección #${first.idx + 1} (${first.type} / ${first.key}): ${first.errors.join(
-            ", "
-          )}`
+          `No se puede guardar. Errores en sección #${first.idx + 1} (${first.type} / ${first.key}): ${first.errors.join(", ")}`
         );
       }
 
@@ -316,12 +495,16 @@ export default function AdminPageEditor() {
 
   if (loading) return <div className="text-neutral-300">Cargando…</div>;
 
+  const sectionIds = sections.map((s) => s.sectionKey);
+
   return (
     <div>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-extrabold">Editar página (ID: {id})</h1>
-          <p className="mt-2 text-sm text-neutral-300">Ahora con validación + duplicar secciones.</p>
+          <p className="mt-2 text-sm text-neutral-300">
+            Reordena secciones con drag & drop (handle ⠿). Guarda para persistir.
+          </p>
         </div>
 
         <div className="flex gap-2">
@@ -344,6 +527,7 @@ export default function AdminPageEditor() {
           <button
             className="rounded-xl border border-red-900/40 bg-red-950/20 px-3 py-2 text-sm text-red-200 hover:bg-red-950/30"
             onClick={onDelete}
+            type="button"
           >
             Eliminar
           </button>
@@ -352,6 +536,7 @@ export default function AdminPageEditor() {
             className="rounded-xl bg-white px-4 py-2 text-sm font-extrabold text-black disabled:opacity-50"
             onClick={onSave}
             disabled={saving}
+            type="button"
           >
             {saving ? "Guardando..." : "Guardar"}
           </button>
@@ -359,7 +544,9 @@ export default function AdminPageEditor() {
       </div>
 
       {err ? (
-        <div className="mt-4 rounded-2xl border border-red-900/40 bg-red-950/20 p-4 text-sm text-red-200">{err}</div>
+        <div className="mt-4 rounded-2xl border border-red-900/40 bg-red-950/20 p-4 text-sm text-red-200">
+          {err}
+        </div>
       ) : null}
 
       {/* Meta */}
@@ -410,7 +597,7 @@ export default function AdminPageEditor() {
         {/* Add section */}
         <div className="rounded-3xl border border-neutral-800 bg-neutral-950/30 p-5">
           <div className="text-sm font-extrabold text-neutral-200">Agregar sección</div>
-          <p className="mt-2 text-sm text-neutral-300">Se agrega al final (luego puedes reordenar).</p>
+          <p className="mt-2 text-sm text-neutral-300">Se agrega al final (luego puedes arrastrar para ordenar).</p>
 
           <div className="mt-4 grid gap-2 sm:grid-cols-2">
             {sectionTypes.map((t) => (
@@ -427,103 +614,48 @@ export default function AdminPageEditor() {
         </div>
       </div>
 
-      {/* Sections */}
+      {/* Sections (DnD) */}
       <div className="mt-6 rounded-3xl border border-neutral-800 bg-neutral-950/30 p-5">
         <div className="text-sm font-extrabold text-neutral-200">Secciones</div>
 
-        <div className="mt-4 space-y-4">
-          {sections.map((s, idx) => {
-            const errors = validateSection(s.type, s.dataJson);
-            const ok = errors.length === 0;
+        {!sections.length ? (
+          <div className="mt-4 rounded-2xl border border-neutral-800 bg-black/20 p-4 text-sm text-neutral-300">
+            No hay secciones aún. Agrega una desde el panel de la derecha.
+          </div>
+        ) : (
+          <div className="mt-4">
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={onDragEnd}
+              modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+            >
+              <SortableContext items={sectionIds} strategy={verticalListSortingStrategy}>
+                <div className="space-y-4">
+                  {sections.map((s, idx) => {
+                    const errors = validateSection(s.type, s.dataJson);
 
-            return (
-              <div key={s.sectionKey} className="rounded-2xl border border-neutral-800 bg-black/20 p-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="text-sm font-extrabold">
-                    #{idx + 1} — {s.sectionKey} — {s.type}{" "}
-                    <span
-                      className={`ml-2 rounded-full px-2 py-1 text-xs ${
-                        ok ? "bg-green-900/40 text-green-200" : "bg-red-900/40 text-red-200"
-                      }`}
-                    >
-                      {ok ? "OK" : `Errores: ${errors.length}`}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    <button className="rounded-lg border border-neutral-800 px-2 py-1 text-xs" onClick={() => move(idx, -1)} type="button">
-                      ↑
-                    </button>
-                    <button className="rounded-lg border border-neutral-800 px-2 py-1 text-xs" onClick={() => move(idx, 1)} type="button">
-                      ↓
-                    </button>
-
-                    <button
-                      className="rounded-lg border border-neutral-800 px-2 py-1 text-xs hover:bg-neutral-900/40"
-                      onClick={() => duplicateSection(idx)}
-                      type="button"
-                      title="Duplicar sección"
-                    >
-                      Duplicar
-                    </button>
-
-                    <button
-                      className="rounded-lg border border-red-900/40 bg-red-950/20 px-2 py-1 text-xs text-red-200"
-                      onClick={() => removeSection(idx)}
-                      type="button"
-                    >
-                      Quitar
-                    </button>
-                  </div>
+                    return (
+                      <SortableSectionCard
+                        key={s.sectionKey}
+                        section={s}
+                        index={idx}
+                        errors={errors}
+                        sectionTypes={sectionTypes}
+                        onMoveUp={() => moveButtons(idx, -1)}
+                        onMoveDown={() => moveButtons(idx, 1)}
+                        onDuplicate={() => duplicateSection(idx)}
+                        onRemove={() => removeSection(idx)}
+                        onChangeType={(type) => updateSection(idx, { type })}
+                        onChangeDataJson={(dataJson) => updateSection(idx, { dataJson })}
+                      />
+                    );
+                  })}
                 </div>
-
-                {!ok ? (
-                  <div className="mt-2 rounded-xl border border-red-900/40 bg-red-950/10 p-3 text-xs text-red-200">
-                    <div className="font-bold">Errores:</div>
-                    <ul className="mt-1 list-disc pl-5">
-                      {errors.slice(0, 6).map((e, i) => (
-                        <li key={i}>{e}</li>
-                      ))}
-                    </ul>
-                    {errors.length > 6 ? <div className="mt-1 text-red-300">… y {errors.length - 6} más</div> : null}
-                  </div>
-                ) : null}
-
-                {/* Type + Form */}
-                <div className="mt-3 grid gap-3 md:grid-cols-3">
-                  <div>
-                    <label className="text-xs text-neutral-400">Type</label>
-                    <select
-                      className="mt-2 w-full rounded-xl border border-neutral-800 bg-black/30 px-3 py-2 text-sm"
-                      value={s.type}
-                      onChange={(e) => updateSection(idx, { type: e.target.value })}
-                    >
-                      {sectionTypes.map((t) => (
-                        <option key={t} value={t}>
-                          {t}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <SectionForm
-                      type={s.type}
-                      dataJson={s.dataJson}
-                      onChangeDataJson={(next) => updateSection(idx, { dataJson: next })}
-                    />
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-
-          {!sections.length ? (
-            <div className="rounded-2xl border border-neutral-800 bg-black/20 p-4 text-sm text-neutral-300">
-              No hay secciones aún. Agrega una desde el panel de la derecha.
-            </div>
-          ) : null}
-        </div>
+              </SortableContext>
+            </DndContext>
+          </div>
+        )}
       </div>
     </div>
   );
