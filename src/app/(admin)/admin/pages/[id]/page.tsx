@@ -462,6 +462,13 @@ export default function AdminPageEditor() {
       "divider",
       "spacer",
       "cta",
+      "heroMedia",
+      "productsGrid",
+      "cardsGrid",
+      "ctaSplit",
+      "pricingTabs",
+      "contactForm",
+"contactFormSplit",
     ],
     []
   );

@@ -142,7 +142,135 @@ export const carouselSchema = z.object({
     )
     .min(1),
 });
+export const ProductsGridSchema = z.object({
+  title: z.string().optional(),
+  subtitle: z.string().optional(),
+  productSlugs: z.array(z.string()).min(1),
+  showPrice: z.boolean().optional(),
+  showAddToCart: z.boolean().optional(),
+  columns: z.union([z.literal(2), z.literal(3), z.literal(4)]).optional(),
+});
+export const heroMediaSchema = z.object({
+  eyebrow: z.string().optional(),
+  title: z.string().optional(),
+  subtitle: z.string().optional(),
 
+  badges: z.array(z.string()).optional(),
+
+  primaryCta: z.object({
+    text: z.string(),
+    href: z.string(),
+  }).optional(),
+
+  secondaryCta: z.object({
+    text: z.string(),
+    href: z.string(),
+  }).optional(),
+
+  mediaType: z.enum(["image", "video"]).optional(),
+  mediaUrl: z.string().optional(),
+  mediaAlt: z.string().optional(),
+
+  includesTitle: z.string().optional(),
+  includesText: z.string().optional(),
+  includesImages: z.array(
+    z.object({
+      imageUrl: z.string(),
+      alt: z.string().optional(),
+    })
+  ).optional(),
+});
+export const cardsGridSchema = z.object({
+  title: z.string().optional(),
+  subtitle: z.string().optional(),
+  columns: z.union([z.literal(2), z.literal(3), z.literal(4)]).optional(),
+  cards: z.array(
+    z.object({
+      imageUrl: z.string(),
+      imageAlt: z.string().optional(),
+      title: z.string(),
+      text: z.string().optional(),
+      ctaText: z.string().optional(),
+      ctaHref: z.string().optional(),
+    })
+  ).min(1),
+});
+export const pricingTabsSchema = z.object({
+  eyebrow: z.string().optional(),
+  title: z.string().optional(),
+  subtitle: z.string().optional(),
+
+  infoCta: z
+    .object({
+      text: z.string(),
+      href: z.string(),
+    })
+    .optional(),
+
+  currency: z.string().optional(),
+
+  billingOptions: z
+    .array(
+      z.object({
+        key: z.string(),
+        label: z.string(),
+        unit: z.string().optional(),
+      })
+    )
+    .min(1),
+
+  defaultBilling: z.string().optional(),
+
+  plans: z
+    .array(
+      z.object({
+        name: z.string(),
+        badge: z.string().optional(),
+        highlighted: z.boolean().optional(),
+        features: z.array(z.string()).default([]),
+        ctaText: z.string().optional(),
+        ctaHref: z.string().optional(),
+pricing: z.record(
+  z.string(),
+  z.object({
+    normal: z.number(),
+    promo: z.number().optional(),
+  })
+),
+      })
+    )
+    .min(1),
+
+  note: z.string().optional(),
+});
+export const contactFormSchema = z.object({
+  title: z.string().optional(),
+  subtitle: z.string().optional(),
+  bullets: z.array(z.string()).optional(),
+  formTitle: z.string().optional(),
+  giroOptions: z.array(z.string()).optional(),
+  primaryCtaText: z.string().optional(),
+  secondaryCtaText: z.string().optional(),
+});
+
+export const contactFormSplitSchema = contactFormSchema.extend({
+  imageUrl: z.string().optional(),
+  imageAlt: z.string().optional(),
+});
+export const ctaSplitSchema = z.object({
+  title: z.string().optional(),
+  subtitle: z.string().optional(),
+  primaryCta: z.object({ text: z.string(), href: z.string() }).optional(),
+  secondaryCta: z.object({ text: z.string(), href: z.string() }).optional(),
+  slides: z.array(
+    z.object({
+      imageUrl: z.string(),
+      alt: z.string().optional(),
+      caption: z.string().optional(),
+      href: z.string().optional(),
+    })
+  ).min(1),
+});
 /* =========================
    Public mapping (IMPORTANT)
    ========================= */
@@ -162,4 +290,12 @@ export const schemaByType: Record<string, z.ZodTypeAny> = {
   spacer: spacerSchema,
   pricing: pricingSchema,
   carousel: carouselSchema,
+  heroMedia: heroMediaSchema,
+  cardsGrid: cardsGridSchema,
+ctaSplit: ctaSplitSchema,
+pricingTabs: pricingTabsSchema,
+contactForm: contactFormSchema,
+contactFormSplit: contactFormSplitSchema,
+  // ✅ agrega esto
+  productsGrid: ProductsGridSchema,
 };

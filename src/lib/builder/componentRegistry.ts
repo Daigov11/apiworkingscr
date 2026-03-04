@@ -12,7 +12,13 @@ import DividerSection from "@/components/sections/DividerSection";
 import SpacerSection from "@/components/sections/SpacerSection";
 import CtaSection from "@/components/sections/CtaSection";
 import CarouselLazy from "@/components/sections/CarouselLazy";
-
+import ProductsGridSection from "@/components/sections/ProductsGridSection";
+import HeroMediaSection from "@/components/sections/HeroMediaSection";
+import CardsGridSection from "@/components/sections/CardsGridSection";
+import CtaSplitSection from "@/components/sections/CtaSplitSection";
+import PricingTabsSection from "@/components/sections/PricingTabsSection";
+import ContactFormSection from "@/components/sections/ContactFormSection";
+import ContactFormSplitSection from "@/components/sections/ContactFormSplitSection";
 export const componentByType: Record<string, React.ComponentType<{ data: any }>> = {
   hero: HeroSection,
   text: TextSection,
@@ -27,7 +33,13 @@ export const componentByType: Record<string, React.ComponentType<{ data: any }>>
   divider: DividerSection,
   spacer: SpacerSection,
   cta: CtaSection,
-
+  productsGrid: ProductsGridSection,
+  heroMedia: HeroMediaSection,
+  cardsGrid: CardsGridSection,
+ctaSplit: CtaSplitSection,
+pricingTabs: PricingTabsSection,
+contactForm: ContactFormSection,
+contactFormSplit: ContactFormSplitSection,
   // pesado: client lazy
   carousel: CarouselLazy,
 };

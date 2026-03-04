@@ -27,7 +27,7 @@ export default function Header() {
         <nav className="awcmr-header__nav">
           <a href="/sistema-de-restaurantes" className="awcmr-header__link">Restaurantes</a>
           <a href="/sistema-para-hoteles" className="awcmr-header__link">Hoteles</a>
-          <a href="/contacto" className="awcmr-header__link">Contacto</a>
+          <a href="/contacto" className="awcmr-header__link">Contacto XD</a>
         </nav>
 
         <div className="awcmr-header__actions">

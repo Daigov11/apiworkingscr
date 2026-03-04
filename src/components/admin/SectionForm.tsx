@@ -265,6 +265,13 @@ export default function SectionForm({ type, dataJson, onChangeDataJson }: Props)
     "logos",
     "carousel",
     "pricing",
+    "productsgrid",
+    "heromedia",
+    "cardsgrid",
+"ctasplit",
+"pricingtabs",
+"contactform",
+"contactformsplit",
   ].includes(t);
 
   const forceJson = parsed === null;
@@ -286,40 +293,73 @@ export default function SectionForm({ type, dataJson, onChangeDataJson }: Props)
   }
 
   // ✅ normaliza __key para DnD (una sola vez cuando hace falta)
-  useEffect(() => {
-    if (!parsed) return;
+useEffect(() => {
+  if (!parsed) return;
 
-    const base: any = parsed;
-    let keyName: string | null = null;
+  const base: any = parsed;
 
-    if (["features", "stats", "faq", "testimonials", "carousel"].includes(t)) keyName = "items";
-    if (t === "logos") keyName = "logos";
-    if (t === "pricing") keyName = "plans";
-
-    if (!keyName) return;
-
-    const arr = Array.isArray(base[keyName]) ? base[keyName] : [];
+  function normalizeArrayField(field: string, prefix: string) {
+    const arr = Array.isArray(base[field]) ? base[field] : [];
     let changed = false;
 
     const nextArr = arr.map((it: any) => {
       if (!it || typeof it !== "object") {
         changed = true;
-        return { __key: genKey(keyName!), value: it };
+        return { __key: genKey(prefix), value: it };
       }
       if (!it.__key) {
         changed = true;
-        return { ...it, __key: genKey(keyName!) };
+        return { ...it, __key: genKey(prefix) };
       }
       return it;
     });
 
-    if (!changed) return;
+    return { changed, nextArr };
+  }
 
-    const nextObj = { ...base, [keyName]: nextArr };
+  // ✅ Caso especial: pricingTabs tiene 2 arrays DnD
+  if (t === "pricingtabs") {
+    const a = normalizeArrayField("billingOptions", "billingOptions");
+    const b = normalizeArrayField("plans", "plans");
+
+    if (!a.changed && !b.changed) return;
+
+    const nextObj = { ...base, billingOptions: a.nextArr, plans: b.nextArr };
     const nextJson = stringify(nextObj);
     if (nextJson !== dataJson) onChangeDataJson(nextJson);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [t]);
+    return;
+  }
+
+  // resto igual que tenías
+  let keyName: string | null = null;
+  if (["features", "stats", "faq", "testimonials", "carousel"].includes(t)) keyName = "items";
+  if (t === "logos") keyName = "logos";
+  if (t === "pricing") keyName = "plans";
+
+  if (!keyName) return;
+
+  const arr = Array.isArray(base[keyName]) ? base[keyName] : [];
+  let changed = false;
+
+  const nextArr = arr.map((it: any) => {
+    if (!it || typeof it !== "object") {
+      changed = true;
+      return { __key: genKey(keyName!), value: it };
+    }
+    if (!it.__key) {
+      changed = true;
+      return { ...it, __key: genKey(keyName!) };
+    }
+    return it;
+  });
+
+  if (!changed) return;
+
+  const nextObj = { ...base, [keyName]: nextArr };
+  const nextJson = stringify(nextObj);
+  if (nextJson !== dataJson) onChangeDataJson(nextJson);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [t]);
 
   if (!supported) {
     return (
@@ -372,7 +412,160 @@ export default function SectionForm({ type, dataJson, onChangeDataJson }: Props)
               </div>
             </>
           ) : null}
+{/* HEROMEDIA */}
+{t === "heromedia" ? (
+  <>
+    <FieldText
+      label="Eyebrow (texto pequeño arriba)"
+      value={(parsed as any)?.eyebrow ?? ""}
+      onChange={(v) => setField("eyebrow", v)}
+    />
 
+    <FieldText
+      label="Título"
+      value={(parsed as any)?.title ?? ""}
+      onChange={(v) => setField("title", v)}
+    />
+
+    <FieldTextarea
+      label="Subtítulo"
+      value={(parsed as any)?.subtitle ?? ""}
+      onChange={(v) => setField("subtitle", v)}
+    />
+
+    {/* Badges (chips) */}
+    <div>
+      <label className="text-xs text-neutral-400">Badges (1 por línea)</label>
+      <textarea
+        className="mt-2 w-full rounded-xl border border-neutral-800 bg-black/30 p-3 font-mono text-xs text-neutral-200"
+        rows={4}
+        value={Array.isArray((parsed as any)?.badges) ? (parsed as any).badges.join("\n") : ""}
+        onChange={(e) => {
+          const lines = e.target.value
+            .split(/\r?\n/)
+            .map((x) => x.trim())
+            .filter(Boolean);
+          setField("badges", lines);
+        }}
+        placeholder={["Tiendas", "Hoteles", "Restaurantes"].join("\n")}
+      />
+    </div>
+
+    {/* CTAs */}
+    <div className="rounded-2xl border border-neutral-800 bg-black/10 p-3">
+      <div className="text-sm font-extrabold text-neutral-200">Botones (CTA)</div>
+
+      <div className="mt-3 grid gap-3 md:grid-cols-2">
+        <FieldText
+          label="CTA principal - Texto"
+          value={(parsed as any)?.primaryCta?.text ?? ""}
+          onChange={(v) => setField("primaryCta", { ...(parsed as any)?.primaryCta, text: v, href: (parsed as any)?.primaryCta?.href ?? "" })}
+        />
+        <FieldText
+          label="CTA principal - Link"
+          value={(parsed as any)?.primaryCta?.href ?? ""}
+          onChange={(v) => setField("primaryCta", { ...(parsed as any)?.primaryCta, href: v, text: (parsed as any)?.primaryCta?.text ?? "" })}
+        />
+      </div>
+
+      <div className="mt-3 grid gap-3 md:grid-cols-2">
+        <FieldText
+          label="CTA secundario - Texto"
+          value={(parsed as any)?.secondaryCta?.text ?? ""}
+          onChange={(v) => setField("secondaryCta", { ...(parsed as any)?.secondaryCta, text: v, href: (parsed as any)?.secondaryCta?.href ?? "" })}
+        />
+        <FieldText
+          label="CTA secundario - Link"
+          value={(parsed as any)?.secondaryCta?.href ?? ""}
+          onChange={(v) => setField("secondaryCta", { ...(parsed as any)?.secondaryCta, href: v, text: (parsed as any)?.secondaryCta?.text ?? "" })}
+        />
+      </div>
+
+      <div className="mt-2 text-xs text-neutral-500">
+        Tip: si dejas vacío el CTA secundario, puedes ocultarlo luego (si quieres lo agregamos).
+      </div>
+    </div>
+
+    {/* Media */}
+    <div className="rounded-2xl border border-neutral-800 bg-black/10 p-3">
+      <div className="text-sm font-extrabold text-neutral-200">Media (derecha)</div>
+
+      <div className="mt-3 grid gap-3 md:grid-cols-2">
+        <div>
+          <label className="text-xs text-neutral-400">Tipo de media</label>
+          <select
+            className="mt-2 w-full rounded-xl border border-neutral-800 bg-black/30 px-3 py-2 text-sm text-neutral-200"
+            value={(parsed as any)?.mediaType ?? "image"}
+            onChange={(e) => setField("mediaType", e.target.value)}
+          >
+            <option value="image">Imagen</option>
+            <option value="video">Video (embed)</option>
+          </select>
+        </div>
+
+        <FieldText
+          label="Media URL (imagen o embed)"
+          value={(parsed as any)?.mediaUrl ?? ""}
+          onChange={(v) => setField("mediaUrl", v)}
+        />
+      </div>
+
+      <FieldText
+        label="Media Alt (opcional)"
+        value={(parsed as any)?.mediaAlt ?? ""}
+        onChange={(v) => setField("mediaAlt", v)}
+      />
+
+      <div className="mt-2 text-xs text-neutral-500">
+        Video: usa URL embed (ej: https://www.youtube.com/embed/XXXX). Imagen: URL directa.
+      </div>
+    </div>
+
+    {/* Includes */}
+    <div className="rounded-2xl border border-neutral-800 bg-black/10 p-3">
+      <div className="text-sm font-extrabold text-neutral-200">Bloque “Tu sistema incluye”</div>
+
+      <FieldText
+        label="Título del bloque (opcional)"
+        value={(parsed as any)?.includesTitle ?? ""}
+        onChange={(v) => setField("includesTitle", v)}
+      />
+
+      <FieldTextarea
+        label="Texto del bloque"
+        value={(parsed as any)?.includesText ?? ""}
+        onChange={(v) => setField("includesText", v)}
+      />
+
+      <div>
+        <label className="text-xs text-neutral-400">Imágenes (1 URL por línea)</label>
+        <textarea
+          className="mt-2 w-full rounded-xl border border-neutral-800 bg-black/30 p-3 font-mono text-xs text-neutral-200"
+          rows={5}
+          value={
+            Array.isArray((parsed as any)?.includesImages)
+              ? (parsed as any).includesImages.map((x: any) => x?.imageUrl || "").filter(Boolean).join("\n")
+              : ""
+          }
+          onChange={(e) => {
+            const lines = e.target.value
+              .split(/\r?\n/)
+              .map((x) => x.trim())
+              .filter(Boolean);
+
+            const arr = lines.map((url) => ({ imageUrl: url }));
+            setField("includesImages", arr);
+          }}
+          placeholder={[
+            "https://picsum.photos/seed/inc1/400/300",
+            "https://picsum.photos/seed/inc2/400/300",
+            "https://picsum.photos/seed/inc3/400/300",
+          ].join("\n")}
+        />
+      </div>
+    </div>
+  </>
+) : null}
           {/* TEXT */}
           {t === "text" ? (
             <>
@@ -430,6 +623,178 @@ export default function SectionForm({ type, dataJson, onChangeDataJson }: Props)
             </>
           ) : null}
 
+{/* PRODUCTSGRID */}
+{t === "productsgrid" ? (
+  <>
+    <FieldText
+      label="Título (opcional)"
+      value={(parsed as any)?.title ?? ""}
+      onChange={(v) => setField("title", v)}
+    />
+
+    <FieldTextarea
+      label="Subtítulo (opcional)"
+      value={(parsed as any)?.subtitle ?? ""}
+      onChange={(v) => setField("subtitle", v)}
+    />
+
+    <div>
+      <label className="text-xs text-neutral-400">
+        Productos (slugs) — 1 por línea
+      </label>
+
+      <textarea
+        className="mt-2 w-full rounded-xl border border-neutral-800 bg-black/30 p-3 font-mono text-xs text-neutral-200"
+        rows={6}
+        value={Array.isArray((parsed as any)?.productSlugs) ? (parsed as any).productSlugs.join("\n") : ""}
+        onChange={(e) => {
+          const lines = e.target.value
+            .split(/\r?\n/)
+            .map((x) => x.trim())
+            .filter(Boolean);
+
+          setField("productSlugs", lines);
+        }}
+        placeholder={[
+          "ticketera-termica-80mm",
+          "rollo-termico-80mm",
+          "sistema-apiworking-pos",
+          "pack-ticketera-rollos",
+        ].join("\n")}
+      />
+
+      <div className="mt-1 text-xs text-neutral-500">
+        Tip: pega slugs tal cual están en el catálogo. Luego lo haremos con selector visual.
+      </div>
+    </div>
+
+    <div className="grid gap-3 md:grid-cols-2">
+      <div>
+        <label className="text-xs text-neutral-400">Columnas</label>
+        <select
+          className="mt-2 w-full rounded-xl border border-neutral-800 bg-black/30 px-3 py-2 text-sm text-neutral-200"
+          value={String((parsed as any)?.columns ?? 4)}
+          onChange={(e) => setField("columns", Number(e.target.value))}
+        >
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+        </select>
+      </div>
+
+      <div className="grid gap-3">
+        <FieldSwitch
+          label="Mostrar precio"
+          checked={(parsed as any)?.showPrice !== false}
+          onChange={(v) => setField("showPrice", v)}
+        />
+        <FieldSwitch
+          label="Mostrar botón (Agregar al carrito)"
+          checked={(parsed as any)?.showAddToCart !== false}
+          onChange={(v) => setField("showAddToCart", v)}
+        />
+      </div>
+    </div>
+  </>
+) : null}
+{/* CARDSGRID */}
+{t === "cardsgrid" ? (
+  <>
+    <FieldText label="Título" value={(parsed as any)?.title ?? ""} onChange={(v) => setField("title", v)} />
+    <FieldTextarea label="Subtítulo (opcional)" value={(parsed as any)?.subtitle ?? ""} onChange={(v) => setField("subtitle", v)} />
+
+    <div>
+      <label className="text-xs text-neutral-400">Columnas</label>
+      <select
+        className="mt-2 w-full rounded-xl border border-neutral-800 bg-black/30 px-3 py-2 text-sm text-neutral-200"
+        value={String((parsed as any)?.columns ?? 3)}
+        onChange={(e) => setField("columns", Number(e.target.value))}
+      >
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+      </select>
+      <div className="mt-1 text-xs text-neutral-500">En desktop se verá como 2/3/4 columnas; en móvil baja automático.</div>
+    </div>
+
+    <SortableList
+      title="Tarjetas"
+      items={getArray("cards")}
+      onItemsChange={(next) => setArray("cards", next)}
+      createItem={() => ({ __key: genKey("cards"), imageUrl: "", imageAlt: "", title: "", text: "", ctaText: "Ver más", ctaHref: "" })}
+      renderFields={(c, patch) => (
+        <>
+          <div className="grid gap-3 md:grid-cols-2">
+            <FieldText label="Image URL" value={c?.imageUrl ?? ""} onChange={(v) => patch({ imageUrl: v })} />
+            <FieldText label="Alt (opcional)" value={c?.imageAlt ?? ""} onChange={(v) => patch({ imageAlt: v })} />
+          </div>
+          <FieldText label="Título" value={c?.title ?? ""} onChange={(v) => patch({ title: v })} />
+          <FieldTextarea label="Texto (opcional)" value={c?.text ?? ""} onChange={(v) => patch({ text: v })} />
+          <div className="grid gap-3 md:grid-cols-2">
+            <FieldText label="Botón texto (opcional)" value={c?.ctaText ?? ""} onChange={(v) => patch({ ctaText: v })} />
+            <FieldText label="Botón link (opcional)" value={c?.ctaHref ?? ""} onChange={(v) => patch({ ctaHref: v })} />
+          </div>
+        </>
+      )}
+    />
+  </>
+) : null}
+{/* CTASPLIT */}
+{t === "ctasplit" ? (
+  <>
+    <FieldText label="Título" value={(parsed as any)?.title ?? ""} onChange={(v) => setField("title", v)} />
+    <FieldTextarea label="Subtítulo" value={(parsed as any)?.subtitle ?? ""} onChange={(v) => setField("subtitle", v)} />
+
+    <div className="rounded-2xl border border-neutral-800 bg-black/10 p-3">
+      <div className="text-sm font-extrabold text-neutral-200">Botones (CTA)</div>
+
+      <div className="mt-3 grid gap-3 md:grid-cols-2">
+        <FieldText
+          label="CTA principal - Texto"
+          value={(parsed as any)?.primaryCta?.text ?? ""}
+          onChange={(v) => setField("primaryCta", { ...(parsed as any)?.primaryCta, text: v, href: (parsed as any)?.primaryCta?.href ?? "" })}
+        />
+        <FieldText
+          label="CTA principal - Link"
+          value={(parsed as any)?.primaryCta?.href ?? ""}
+          onChange={(v) => setField("primaryCta", { ...(parsed as any)?.primaryCta, href: v, text: (parsed as any)?.primaryCta?.text ?? "" })}
+        />
+      </div>
+
+      <div className="mt-3 grid gap-3 md:grid-cols-2">
+        <FieldText
+          label="CTA secundario - Texto (opcional)"
+          value={(parsed as any)?.secondaryCta?.text ?? ""}
+          onChange={(v) => setField("secondaryCta", { ...(parsed as any)?.secondaryCta, text: v, href: (parsed as any)?.secondaryCta?.href ?? "" })}
+        />
+        <FieldText
+          label="CTA secundario - Link (opcional)"
+          value={(parsed as any)?.secondaryCta?.href ?? ""}
+          onChange={(v) => setField("secondaryCta", { ...(parsed as any)?.secondaryCta, href: v, text: (parsed as any)?.secondaryCta?.text ?? "" })}
+        />
+      </div>
+    </div>
+
+    <SortableList
+      title="Slides (slider)"
+      items={getArray("slides")}
+      onItemsChange={(next) => setArray("slides", next)}
+      createItem={() => ({ __key: genKey("slides"), imageUrl: "", alt: "", caption: "", href: "" })}
+      renderFields={(s, patch) => (
+        <>
+          <div className="grid gap-3 md:grid-cols-2">
+            <FieldText label="Image URL" value={s?.imageUrl ?? ""} onChange={(v) => patch({ imageUrl: v })} />
+            <FieldText label="Alt (opcional)" value={s?.alt ?? ""} onChange={(v) => patch({ alt: v })} />
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            <FieldText label="Caption (opcional)" value={s?.caption ?? ""} onChange={(v) => patch({ caption: v })} />
+            <FieldText label="Href (opcional)" value={s?.href ?? ""} onChange={(v) => patch({ href: v })} />
+          </div>
+        </>
+      )}
+    />
+  </>
+) : null}
           {/* FEATURES (DnD) */}
           {t === "features" ? (
             <>
@@ -642,6 +1007,308 @@ export default function SectionForm({ type, dataJson, onChangeDataJson }: Props)
               />
             </>
           ) : null}
+          {/* PRICINGTABS */}
+{t === "pricingtabs" ? (
+  <>
+    <FieldText label="Eyebrow (opcional)" value={(parsed as any)?.eyebrow ?? ""} onChange={(v) => setField("eyebrow", v)} />
+    <FieldText label="Título" value={(parsed as any)?.title ?? ""} onChange={(v) => setField("title", v)} />
+    <FieldTextarea label="Subtítulo" value={(parsed as any)?.subtitle ?? ""} onChange={(v) => setField("subtitle", v)} />
+
+    <div className="grid gap-3 md:grid-cols-2">
+      <FieldText
+        label="Botón info (opcional) - Texto"
+        value={(parsed as any)?.infoCta?.text ?? ""}
+        onChange={(v) => setField("infoCta", { ...(parsed as any)?.infoCta, text: v, href: (parsed as any)?.infoCta?.href ?? "" })}
+      />
+      <FieldText
+        label="Botón info (opcional) - Link"
+        value={(parsed as any)?.infoCta?.href ?? ""}
+        onChange={(v) => setField("infoCta", { ...(parsed as any)?.infoCta, href: v, text: (parsed as any)?.infoCta?.text ?? "" })}
+      />
+    </div>
+
+    <div className="grid gap-3 md:grid-cols-2">
+      <FieldText label="Currency (PEN)" value={(parsed as any)?.currency ?? "PEN"} onChange={(v) => setField("currency", v)} />
+
+      <div>
+        <label className="text-xs text-neutral-400">Default tab</label>
+        <select
+          className="mt-2 w-full rounded-xl border border-neutral-800 bg-black/30 px-3 py-2 text-sm text-neutral-200"
+          value={(parsed as any)?.defaultBilling ?? ""}
+          onChange={(e) => setField("defaultBilling", e.target.value)}
+        >
+          <option value="">(Primero)</option>
+          {getArray("billingOptions").map((b: any) => (
+            <option key={b?.__key || b?.key} value={b?.key || ""}>
+              {b?.label || b?.key || "tab"}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+
+    {/* Tabs editor */}
+    <SortableList
+      title="Tabs (Mensuales / Semestrales / Anuales...)"
+      items={getArray("billingOptions")}
+      onItemsChange={(next) => setArray("billingOptions", next)}
+      createItem={() => ({ __key: genKey("billingOptions"), key: "", label: "", unit: "" })}
+      renderFields={(b, patch) => (
+        <div className="grid gap-3 md:grid-cols-3">
+          <FieldText label="Key (ej: monthly)" value={b?.key ?? ""} onChange={(v) => patch({ key: v })} />
+          <FieldText label="Label (ej: Mensuales)" value={b?.label ?? ""} onChange={(v) => patch({ label: v })} />
+          <FieldText label="Unit (opcional) ej: /mes" value={b?.unit ?? ""} onChange={(v) => patch({ unit: v })} />
+        </div>
+      )}
+    />
+
+    {/* Plans editor */}
+    <SortableList
+      title="Planes"
+      items={getArray("plans")}
+      onItemsChange={(next) => setArray("plans", next)}
+      createItem={() => ({
+        __key: genKey("plans"),
+        name: "",
+        badge: "",
+        highlighted: false,
+        ctaText: "Comenzar ahora",
+        ctaHref: "/contacto",
+        features: [],
+        pricing: {},
+      })}
+      renderFields={(p, patch) => {
+        const billing = getArray("billingOptions");
+        const pricing = p?.pricing && typeof p.pricing === "object" ? p.pricing : {};
+        const featuresArr = Array.isArray(p?.features) ? p.features : [];
+
+        function setPrice(billingKey: string, key: "normal" | "promo", value: string) {
+          const num = Number(value);
+          const prevForKey = pricing[billingKey] && typeof pricing[billingKey] === "object" ? pricing[billingKey] : {};
+          const nextForKey: any = { ...prevForKey };
+
+          if (value === "") {
+            delete nextForKey[key];
+          } else {
+            nextForKey[key] = Number.isNaN(num) ? 0 : num;
+          }
+
+          const nextPricing: any = { ...pricing, [billingKey]: nextForKey };
+          patch({ pricing: nextPricing });
+        }
+
+        return (
+          <>
+            <div className="grid gap-3 md:grid-cols-2">
+              <FieldText label="Nombre" value={p?.name ?? ""} onChange={(v) => patch({ name: v })} />
+              <FieldText label="Badge (opcional)" value={p?.badge ?? ""} onChange={(v) => patch({ badge: v })} />
+            </div>
+
+            <FieldSwitch label="Destacado (Más popular)" checked={!!p?.highlighted} onChange={(v) => patch({ highlighted: v })} />
+
+            <div className="grid gap-3 md:grid-cols-2">
+              <FieldText label="CTA Text" value={p?.ctaText ?? ""} onChange={(v) => patch({ ctaText: v })} />
+              <FieldText label="CTA Href" value={p?.ctaHref ?? ""} onChange={(v) => patch({ ctaHref: v })} />
+            </div>
+
+            {/* Tabla de precios por tab */}
+            <div className="rounded-2xl border border-neutral-800 bg-black/10 p-3">
+              <div className="text-sm font-extrabold text-neutral-200">Precios por periodo</div>
+
+              {!billing.length ? (
+                <div className="mt-2 text-xs text-neutral-400">Primero agrega Tabs (billingOptions).</div>
+              ) : (
+                <div className="mt-3 grid gap-3">
+                  {billing.map((b: any) => {
+                    const k = String(b?.key || "");
+                    if (!k) return null;
+                    const row = pricing[k] || {};
+                    return (
+                      <div key={b?.__key || k} className="grid gap-3 md:grid-cols-3">
+                        <div className="rounded-xl border border-neutral-800 bg-black/20 px-3 py-2 text-sm text-neutral-200">
+                          {b?.label || k}
+                        </div>
+
+                        <div>
+                          <label className="text-xs text-neutral-400">Normal</label>
+                          <input
+                            type="number"
+                            className="mt-2 w-full rounded-xl border border-neutral-800 bg-black/30 px-3 py-2 text-sm text-neutral-200"
+                            value={row?.normal ?? ""}
+                            onChange={(e) => setPrice(k, "normal", e.target.value)}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-xs text-neutral-400">Promo (opcional)</label>
+                          <input
+                            type="number"
+                            className="mt-2 w-full rounded-xl border border-neutral-800 bg-black/30 px-3 py-2 text-sm text-neutral-200"
+                            value={row?.promo ?? ""}
+                            onChange={(e) => setPrice(k, "promo", e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Features (lista simple) */}
+            <div className="rounded-2xl border border-neutral-800 bg-black/10 p-3">
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-extrabold text-neutral-200">Beneficios (features)</div>
+                <button
+                  type="button"
+                  className="rounded-xl border border-neutral-800 px-3 py-2 text-xs hover:bg-neutral-900/40"
+                  onClick={() => patch({ features: [...featuresArr, ""] })}
+                >
+                  + Agregar
+                </button>
+              </div>
+
+              {featuresArr.length ? (
+                featuresArr.map((f: string, i: number) => (
+                  <div key={i} className="mt-2 flex items-center gap-2">
+                    <input
+                      className="w-full rounded-xl border border-neutral-800 bg-black/30 px-3 py-2 text-sm text-neutral-200"
+                      value={f}
+                      onChange={(e) => {
+                        const next = featuresArr.slice();
+                        next[i] = e.target.value;
+                        patch({ features: next });
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="rounded-lg border border-red-900/40 bg-red-950/20 px-2 py-1 text-xs text-red-200"
+                      onClick={() => {
+                        const next = featuresArr.slice().filter((_: any, idx: number) => idx !== i);
+                        patch({ features: next });
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div className="mt-2 text-xs text-neutral-400">Agrega beneficios para este plan.</div>
+              )}
+            </div>
+          </>
+        );
+      }}
+    />
+
+    <FieldTextarea label="Nota (opcional)" value={(parsed as any)?.note ?? ""} onChange={(v) => setField("note", v)} />
+  </>
+) : null}
+{/* CONTACTFORM / CONTACTFORMSPLIT */}
+{t === "contactform" || t === "contactformsplit" ? (
+  <>
+    <FieldText
+      label="Título"
+      value={(parsed as any)?.title ?? ""}
+      onChange={(v) => setField("title", v)}
+    />
+
+    <FieldTextarea
+      label="Subtítulo"
+      value={(parsed as any)?.subtitle ?? ""}
+      onChange={(v) => setField("subtitle", v)}
+    />
+
+    {/* Bullets */}
+    <div>
+      <label className="text-xs text-neutral-400">Beneficios (bullets) — 1 por línea</label>
+      <textarea
+        className="mt-2 w-full rounded-xl border border-neutral-800 bg-black/30 p-3 font-mono text-xs text-neutral-200"
+        rows={5}
+        value={
+          Array.isArray((parsed as any)?.bullets)
+            ? (parsed as any).bullets.map((x: any) => String(x ?? "")).filter((x: string) => x.trim()).join("\n")
+            : ""
+        }
+        onChange={(e) => {
+          const lines = e.target.value
+            .split(/\r?\n/)
+            .map((x) => x.trim())
+            .filter(Boolean);
+          setField("bullets", lines);
+        }}
+        placeholder={[
+          "Integración con SUNAT y reporte contable",
+          "Inventario con unidades, lotes y vencimientos",
+          "Catálogo QR y cotización por WhatsApp",
+          "Soporte rápido por WhatsApp y video",
+        ].join("\n")}
+      />
+    </div>
+
+    <div className="grid gap-3 md:grid-cols-2">
+      <FieldText
+        label="Título del formulario (formTitle)"
+        value={(parsed as any)?.formTitle ?? ""}
+        onChange={(v) => setField("formTitle", v)}
+      />
+
+      <div>
+        <label className="text-xs text-neutral-400">Opciones giro negocio — 1 por línea</label>
+        <textarea
+          className="mt-2 w-full rounded-xl border border-neutral-800 bg-black/30 p-3 font-mono text-xs text-neutral-200"
+          rows={4}
+          value={
+            Array.isArray((parsed as any)?.giroOptions)
+              ? (parsed as any).giroOptions.map((x: any) => String(x ?? "")).filter((x: string) => x.trim()).join("\n")
+              : ""
+          }
+          onChange={(e) => {
+            const lines = e.target.value
+              .split(/\r?\n/)
+              .map((x) => x.trim())
+              .filter(Boolean);
+            setField("giroOptions", lines);
+          }}
+          placeholder={["resto", "tienda", "hotel", "otros"].join("\n")}
+        />
+      </div>
+    </div>
+
+    <div className="grid gap-3 md:grid-cols-2">
+      <FieldText
+        label="Texto botón Enviar"
+        value={(parsed as any)?.primaryCtaText ?? ""}
+        onChange={(v) => setField("primaryCtaText", v)}
+      />
+      <FieldText
+        label="Texto botón Limpiar"
+        value={(parsed as any)?.secondaryCtaText ?? ""}
+        onChange={(v) => setField("secondaryCtaText", v)}
+      />
+    </div>
+
+    {/* Extras solo para split */}
+    {t === "contactformsplit" ? (
+      <div className="rounded-2xl border border-neutral-800 bg-black/10 p-3">
+        <div className="text-sm font-extrabold text-neutral-200">Imagen (solo split)</div>
+
+        <div className="mt-3 grid gap-3 md:grid-cols-2">
+          <FieldText
+            label="Image URL"
+            value={(parsed as any)?.imageUrl ?? ""}
+            onChange={(v) => setField("imageUrl", v)}
+          />
+          <FieldText
+            label="Image Alt (opcional)"
+            value={(parsed as any)?.imageAlt ?? ""}
+            onChange={(v) => setField("imageAlt", v)}
+          />
+        </div>
+      </div>
+    ) : null}
+  </>
+) : null}
         </div>
       ) : null}
 
