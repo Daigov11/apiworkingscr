@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   adminCreatePage,
@@ -276,7 +276,7 @@ async function slugExistsExact(candidate: string): Promise<boolean> {
   return (res.items || []).some((p) => p.slug === candidate);
 }
 
-export default function AdminPages() {
+function AdminPagesInner() {
   const router = useRouter();
   const pathname = usePathname();
   const sp = useSearchParams();
@@ -1041,5 +1041,13 @@ export default function AdminPages() {
         </div>
       ) : null}
     </div>
+  );
+}
+
+export default function AdminPages() {
+  return (
+    <Suspense fallback={<div className="p-8 text-neutral-400">Cargando...</div>}>
+      <AdminPagesInner />
+    </Suspense>
   );
 }
