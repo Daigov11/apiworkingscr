@@ -42,7 +42,8 @@ export type CatalogProduct = {
   metaDescription?: string | null;
 
   isFeatured?: boolean;
-
+  images?: string[];
+  category?: CatalogProductCategory;
   // solo para sistemas
   plans?: CatalogPlan[];
 };
@@ -59,4 +60,8 @@ export type ListProductsArgs = {
 export type ListProductsResult = {
   items: CatalogProduct[];
   total: number;
+};
+export type CatalogProductCategory = {
+  name: string;
+  slug: string;
 };

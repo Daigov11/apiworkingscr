@@ -1,12 +1,18 @@
 import Link from "next/link";
-import { getProductBySlug } from "@/lib/catalog/client";
+import { getProductBySlug, listFeaturedProducts } from "@/lib/catalog/client";
 import type { CatalogProduct } from "@/lib/catalog/types";
 import AddToCartButton from "@/components/catalog/AddToCartButton";
+
+type ProductsGridSource = "slugs" | "featured";
 
 type ProductsGridData = {
   title?: string;
   subtitle?: string;
-  productSlugs: string[];
+
+  source?: ProductsGridSource;   // ✅ nuevo
+  productSlugs?: string[];       // slugs opcional ahora
+  featuredLimit?: number;        // ✅ nuevo
+
   showPrice?: boolean;
   showAddToCart?: boolean;
   columns?: 2 | 3 | 4;
@@ -26,13 +32,29 @@ export default async function ProductsGridSection({ data }: { data: any }) {
   const showPrice = d.showPrice !== false;
   const showAddToCart = d.showAddToCart !== false;
 
-  const slugsRaw = Array.isArray(d.productSlugs) ? d.productSlugs : [];
-  const unique = Array.from(
-    new Set(slugsRaw.map((s) => String(s || "").trim()).filter(Boolean))
-  );
+  // Si no viene source:
+  // - si hay slugs => slugs
+  // - si no hay slugs => featured
+  const source: ProductsGridSource =
+    (d.source as ProductsGridSource) ||
+    (Array.isArray(d.productSlugs) && d.productSlugs.length ? "slugs" : "featured");
 
-  const products = (await Promise.all(unique.map((slug) => getProductBySlug(slug))))
-    .filter(Boolean) as CatalogProduct[];
+  let products: CatalogProduct[] = [];
+
+  if (source === "featured") {
+    const limitRaw = Number(d.featuredLimit ?? 8);
+    const limit = Number.isFinite(limitRaw) && limitRaw > 0 ? Math.floor(limitRaw) : 8;
+
+    products = await listFeaturedProducts(limit);
+  } else {
+    const slugsRaw = Array.isArray(d.productSlugs) ? d.productSlugs : [];
+    const unique = Array.from(
+      new Set(slugsRaw.map((s) => String(s || "").trim()).filter(Boolean))
+    );
+
+    products = (await Promise.all(unique.map((slug) => getProductBySlug(slug))))
+      .filter(Boolean) as CatalogProduct[];
+  }
 
   if (!products.length) {
     return (
@@ -40,7 +62,9 @@ export default async function ProductsGridSection({ data }: { data: any }) {
         <div className="rounded-2xl border border-neutral-800 bg-neutral-950/30 p-6">
           <div className="text-lg font-extrabold">{title}</div>
           <div className="mt-2 text-sm text-neutral-300">
-            No hay productos configurados en esta sección.
+            {source === "featured"
+              ? "No hay productos destacados disponibles (featured)."
+              : "No hay productos configurados en esta sección (slugs)."}
           </div>
         </div>
       </section>
@@ -80,6 +104,9 @@ export default async function ProductsGridSection({ data }: { data: any }) {
               ) : null}
             </Link>
 
+            {/* Opcional: si quieres que solo los físicos se agreguen al carrito:
+                {showAddToCart && p.type === "physical" ? (...) : null}
+            */}
             {showAddToCart ? (
               <div className="mt-3">
                 <AddToCartButton product={p} />

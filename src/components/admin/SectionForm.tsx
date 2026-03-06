@@ -638,35 +638,80 @@ useEffect(() => {
       onChange={(v) => setField("subtitle", v)}
     />
 
-    <div>
-      <label className="text-xs text-neutral-400">
-        Productos (slugs) — 1 por línea
-      </label>
-
-      <textarea
-        className="mt-2 w-full rounded-xl border border-neutral-800 bg-black/30 p-3 font-mono text-xs text-neutral-200"
-        rows={6}
-        value={Array.isArray((parsed as any)?.productSlugs) ? (parsed as any).productSlugs.join("\n") : ""}
-        onChange={(e) => {
-          const lines = e.target.value
-            .split(/\r?\n/)
-            .map((x) => x.trim())
-            .filter(Boolean);
-
-          setField("productSlugs", lines);
-        }}
-        placeholder={[
-          "ticketera-termica-80mm",
-          "rollo-termico-80mm",
-          "sistema-apiworking-pos",
-          "pack-ticketera-rollos",
-        ].join("\n")}
-      />
-
-      <div className="mt-1 text-xs text-neutral-500">
-        Tip: pega slugs tal cual están en el catálogo. Luego lo haremos con selector visual.
+    {/* ✅ NUEVO: Fuente */}
+    <div className="grid gap-3 md:grid-cols-2">
+      <div>
+        <label className="text-xs text-neutral-400">Fuente de productos</label>
+        <select
+          className="mt-2 w-full rounded-xl border border-neutral-800 bg-black/30 px-3 py-2 text-sm text-neutral-200"
+          value={String((parsed as any)?.source ?? "slugs")}
+          onChange={(e) => setField("source", e.target.value)}
+        >
+          <option value="slugs">Manual (por slugs)</option>
+          <option value="featured">Destacados (featured)</option>
+        </select>
+        <div className="mt-1 text-xs text-neutral-500">
+          Manual: pegas slugs. / Destacados: trae productos marcados como featured.
+        </div>
       </div>
+
+      {/* ✅ NUEVO: Límite */}
+      {String((parsed as any)?.source ?? "slugs") === "featured" ? (
+        <div>
+          <label className="text-xs text-neutral-400">Límite (cantidad)</label>
+          <input
+            type="number"
+            min={1}
+            max={48}
+            className="mt-2 w-full rounded-xl border border-neutral-800 bg-black/30 px-3 py-2 text-sm text-neutral-200"
+            value={String((parsed as any)?.featuredLimit ?? 8)}
+            onChange={(e) => setField("featuredLimit", Number(e.target.value))}
+          />
+          <div className="mt-1 text-xs text-neutral-500">
+            Recomendado: 8 o 12. Depende del layout y columnas.
+          </div>
+        </div>
+      ) : (
+        <div />
+      )}
     </div>
+
+    {/* ✅ Solo mostrar slugs si source = slugs */}
+    {String((parsed as any)?.source ?? "slugs") !== "featured" ? (
+      <div>
+        <label className="text-xs text-neutral-400">
+          Productos (slugs) — 1 por línea
+        </label>
+
+        <textarea
+          className="mt-2 w-full rounded-xl border border-neutral-800 bg-black/30 p-3 font-mono text-xs text-neutral-200"
+          rows={6}
+          value={
+            Array.isArray((parsed as any)?.productSlugs)
+              ? (parsed as any).productSlugs.join("\n")
+              : ""
+          }
+          onChange={(e) => {
+            const lines = e.target.value
+              .split(/\r?\n/)
+              .map((x) => x.trim())
+              .filter(Boolean);
+
+            setField("productSlugs", lines);
+          }}
+          placeholder={[
+            "ticketera-termica-80mm",
+            "rollo-termico-80mm",
+            "sistema-apiworking-pos",
+            "pack-ticketera-rollos",
+          ].join("\n")}
+        />
+
+        <div className="mt-1 text-xs text-neutral-500">
+          Tip: pega slugs tal cual están en el catálogo. Luego lo haremos con selector visual.
+        </div>
+      </div>
+    ) : null}
 
     <div className="grid gap-3 md:grid-cols-2">
       <div>
