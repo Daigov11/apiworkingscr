@@ -297,13 +297,13 @@ export async function adminCatalogDeleteProduct(id: number) {
 }
 
 export async function adminCatalogListCategories(): Promise<CatalogCategory[]> {
-  var raw = await fetchJson<any[]>(API_BASE + "/catalog/admin/categories", { method: "GET" }, "required");
+  var raw = await fetchJson<any[]>(API_BASE + "/catalog/categories", { method: "GET" }, "required");
   return raw.map(normalizeCategory);
 }
 
 export async function adminCatalogCreateCategory(payload: any) {
   return fetchJson<any>(
-    API_BASE + "/catalog/admin/categories",
+    API_BASE + "/catalog/categories",
     { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) },
     "required"
   );
@@ -311,14 +311,14 @@ export async function adminCatalogCreateCategory(payload: any) {
 
 export async function adminCatalogUpdateCategory(id: number, payload: any) {
   return fetchJson<any>(
-    API_BASE + "/catalog/admin/categories/" + id,
+    API_BASE + "/catalog/categories/" + id,
     { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) },
     "required"
   );
 }
 
 export async function adminCatalogDeleteCategory(id: number) {
-  return fetchJson<any>(API_BASE + "/catalog/admin/categories/" + id, { method: "DELETE" }, "required");
+  return fetchJson<any>(API_BASE + "/catalog/categories/" + id, { method: "DELETE" }, "required");
 }
 
 export async function adminCatalogListPlans(productId: number): Promise<CatalogPlan[]> {
