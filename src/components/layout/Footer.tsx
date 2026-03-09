@@ -10,7 +10,7 @@ export default function Footer() {
         <div style={styles.cols}>
           <div style={styles.col}>
             <div style={styles.colTitle}>Soluciones</div>
-            <a style={styles.link} href="/sistema-de-restaurantes">Restaurantes</a>
+            <a style={styles.link} href="/resto">Restaurantes</a>
             <a style={styles.link} href="/sistema-para-hoteles">Hoteles</a>
           </div>
 

@@ -10,7 +10,11 @@ import {
   adminUpdatePage,
   AdminPageListItem,
 } from "@/lib/api/cmsAdmin";
-
+import {
+  getTemplateSections,
+  PAGE_TEMPLATE_OPTIONS,
+  PageTemplateKey,
+} from "@/lib/builder/pageTemplates";
 function slugify(input: string) {
   return input
     .toLowerCase()
@@ -42,217 +46,8 @@ function formatDate(v?: string) {
  *  Plantillas (secciones iniciales)
  *  =========================== */
 
-type CmsSection = {
-  sectionKey: string;
-  type: string;
-  sortOrder: number;
-  dataJson: string;
-};
 
-type TemplateKey = "none" | "home" | "restaurantes" | "hoteles";
 
-function templateSections(key: TemplateKey): CmsSection[] {
-  if (key === "none") return [];
-
-  if (key === "home") {
-    return [
-      {
-        sectionKey: "h1",
-        type: "hero",
-        sortOrder: 1,
-        dataJson: JSON.stringify({
-          title: "ApiWorking",
-          subtitle: "Sistemas modernos para negocios. Todo editable por módulos.",
-          ctaText: "Solicitar demo",
-          ctaHref: "/contacto",
-        }),
-      },
-      {
-        sectionKey: "h2",
-        type: "features",
-        sortOrder: 2,
-        dataJson: JSON.stringify({
-          title: "¿Por qué ApiWorking?",
-          subtitle: "Tu web se edita sin tocar código",
-          items: [
-            { title: "SEO real (SSR)", text: "Google indexa tus páginas por slug.", icon: "🔎" },
-            { title: "Page Builder", text: "Agrega, quita y reordena módulos.", icon: "🧩" },
-            { title: "Rápido", text: "Cargamos lo pesado cuando toca.", icon: "⚡" },
-          ],
-        }),
-      },
-      {
-        sectionKey: "h3",
-        type: "stats",
-        sortOrder: 3,
-        dataJson: JSON.stringify({
-          title: "Resultados",
-          items: [
-            { value: "1 min", label: "para editar y publicar" },
-            { value: "10+", label: "módulos listos" },
-            { value: "SSR", label: "para SEO" },
-            { value: "Lazy", label: "para performance" },
-          ],
-        }),
-      },
-      {
-        sectionKey: "h4",
-        type: "logos",
-        sortOrder: 4,
-        dataJson: JSON.stringify({
-          title: "Clientes / Partners",
-          logos: [
-            { imageUrl: "https://dummyimage.com/160x50/111/fff&text=Logo+1", alt: "Logo 1" },
-            { imageUrl: "https://dummyimage.com/160x50/111/fff&text=Logo+2", alt: "Logo 2" },
-            { imageUrl: "https://dummyimage.com/160x50/111/fff&text=Logo+3", alt: "Logo 3" },
-          ],
-        }),
-      },
-      {
-        sectionKey: "h5",
-        type: "testimonials",
-        sortOrder: 5,
-        dataJson: JSON.stringify({
-          title: "Opiniones",
-          items: [
-            { name: "Carlos", role: "Restaurante", text: "Me ordenó el negocio." },
-            { name: "María", role: "Hotel", text: "Ahora todo está centralizado." },
-          ],
-        }),
-      },
-      {
-        sectionKey: "h6",
-        type: "pricing",
-        sortOrder: 6,
-        dataJson: JSON.stringify({
-          title: "Planes",
-          subtitle: "Ejemplo editable desde el CMS",
-          plans: [
-            {
-              name: "Starter",
-              price: "S/ 99",
-              period: "mes",
-              features: ["Landing básica", "Secciones esenciales"],
-              ctaText: "Cotizar",
-              ctaHref: "/contacto",
-            },
-            {
-              name: "Pro",
-              price: "S/ 199",
-              period: "mes",
-              highlighted: true,
-              features: ["Page Builder", "SSR/SEO", "Soporte"],
-              ctaText: "Solicitar demo",
-              ctaHref: "/contacto",
-            },
-          ],
-        }),
-      },
-      {
-        sectionKey: "h7",
-        type: "cta",
-        sortOrder: 7,
-        dataJson: JSON.stringify({
-          title: "¿Listo para implementarlo?",
-          text: "Te mostramos una demo y lo adaptamos a tu negocio.",
-          ctaText: "Solicitar demo",
-          ctaHref: "/contacto",
-        }),
-      },
-    ];
-  }
-
-  if (key === "restaurantes") {
-    return [
-      {
-        sectionKey: "r1",
-        type: "hero",
-        sortOrder: 1,
-        dataJson: JSON.stringify({
-          title: "Sistema de Restaurantes",
-          subtitle: "Ventas + Mesas + Comandas + Caja",
-          ctaText: "Solicitar demo",
-          ctaHref: "/contacto",
-        }),
-      },
-      {
-        sectionKey: "r2",
-        type: "features",
-        sortOrder: 2,
-        dataJson: JSON.stringify({
-          title: "Beneficios",
-          items: [
-            { title: "Mesas y comandas", text: "Control total del salón.", icon: "🍽️" },
-            { title: "Caja y reportes", text: "Cierre y métricas.", icon: "📊" },
-            { title: "Rápido", text: "Flujo ágil para mozos.", icon: "⚡" },
-          ],
-        }),
-      },
-      {
-        sectionKey: "r3",
-        type: "faq",
-        sortOrder: 3,
-        dataJson: JSON.stringify({
-          title: "Preguntas frecuentes",
-          items: [
-            { question: "¿Funciona en tablet?", answer: "Sí, es responsive." },
-            { question: "¿Puedo editar la web?", answer: "Sí, por módulos desde el CMS." },
-          ],
-        }),
-      },
-      {
-        sectionKey: "r4",
-        type: "cta",
-        sortOrder: 4,
-        dataJson: JSON.stringify({
-          title: "¿Te interesa para tu restaurante?",
-          text: "Agenda una demo.",
-          ctaText: "Solicitar demo",
-          ctaHref: "/contacto",
-        }),
-      },
-    ];
-  }
-
-  // hoteles
-  return [
-    {
-      sectionKey: "h1",
-      type: "hero",
-      sortOrder: 1,
-      dataJson: JSON.stringify({
-        title: "Sistema para Hoteles",
-        subtitle: "Reservas + Operación + Reportes",
-        ctaText: "Solicitar demo",
-        ctaHref: "/contacto",
-      }),
-    },
-    {
-      sectionKey: "h2",
-      type: "features",
-      sortOrder: 2,
-      dataJson: JSON.stringify({
-        title: "Beneficios",
-        items: [
-          { title: "Control", text: "Operación centralizada.", icon: "🏨" },
-          { title: "Reportes", text: "Datos para decisiones.", icon: "📈" },
-          { title: "Editable", text: "Landing por módulos.", icon: "🧩" },
-        ],
-      }),
-    },
-    {
-      sectionKey: "h3",
-      type: "cta",
-      sortOrder: 3,
-      dataJson: JSON.stringify({
-        title: "¿Listo para una demo?",
-        text: "Te mostramos el sistema.",
-        ctaText: "Solicitar demo",
-        ctaHref: "/contacto",
-      }),
-    },
-  ];
-}
 
 /** ===========================
  *  Duplicar página (helper)
@@ -317,8 +112,7 @@ function AdminPagesInner() {
   const [metaDescription, setMetaDescription] = useState("");
   const [ogImage, setOgImage] = useState("");
   const [createStatus, setCreateStatus] = useState("draft");
-  const [template, setTemplate] = useState<TemplateKey>("none");
-
+const [template, setTemplate] = useState<PageTemplateKey>("none");
   // Modal duplicar (nuevo)
   const [dupOpen, setDupOpen] = useState(false);
   const [dupLoading, setDupLoading] = useState(false);
@@ -457,8 +251,7 @@ function AdminPagesInner() {
       if (!metaTitle.trim()) throw new Error("Meta Title es obligatorio");
       if (!metaDescription.trim()) throw new Error("Meta Description es obligatorio");
 
-      const sections = templateSections(template).map((x, i) => ({ ...x, sortOrder: i + 1 }));
-
+const sections = getTemplateSections(template);
       const payload = {
         slug: s,
         metaTitle: metaTitle.trim(),
@@ -854,110 +647,199 @@ function AdminPagesInner() {
 
       {/* Modal create */}
       {open ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <button className="absolute inset-0 bg-black/70" aria-label="Cerrar" onClick={closeModal} type="button" />
-          <div className="relative w-full max-w-lg rounded-3xl border border-neutral-800 bg-neutral-950 p-6">
-            <div className="flex items-center justify-between">
-              <div className="text-lg font-extrabold">Nueva página</div>
-              <button
-                className="rounded-lg border border-neutral-800 px-3 py-1 text-sm text-neutral-300 hover:text-white"
-                onClick={closeModal}
-                type="button"
-              >
-                Cerrar
-              </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6">
+          <button
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            aria-label="Cerrar"
+            onClick={closeModal}
+            type="button"
+          />
+
+          <div className="relative w-full max-w-2xl overflow-hidden rounded-[28px] border border-white/10 bg-neutral-950 shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
+            {/* Header */}
+            <div className="border-b border-white/10 bg-white/[0.02] px-6 py-5 md:px-8">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="mb-2 inline-flex rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-neutral-400">
+                    CMS · Pages
+                  </div>
+                  <h2 className="text-xl font-semibold tracking-tight text-white md:text-2xl">
+                    Crear nueva página
+                  </h2>
+                  <p className="mt-1 text-sm text-neutral-400">
+                    Configura la base de la página y luego edítala por secciones.
+                  </p>
+                </div>
+
+                <button
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-neutral-400 transition hover:bg-white/[0.06] hover:text-white"
+                  onClick={closeModal}
+                  type="button"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
 
+            {/* Error */}
             {formErr ? (
-              <div className="mt-4 rounded-xl border border-red-900/40 bg-red-950/20 p-3 text-sm text-red-200">{formErr}</div>
-            ) : null}
-
-            <div className="mt-4 space-y-3">
-              <div>
-                <label className="text-xs text-neutral-400">Plantilla</label>
-                <select
-                  className="mt-2 w-full rounded-xl border border-neutral-800 bg-black/30 px-3 py-2 text-sm"
-                  value={template}
-                  onChange={(e) => setTemplate(e.target.value as TemplateKey)}
-                >
-                  <option value="none">Sin plantilla (vacía)</option>
-                  <option value="home">Home (Landing)</option>
-                  <option value="restaurantes">Restaurantes</option>
-                  <option value="hoteles">Hoteles</option>
-                </select>
-                <div className="mt-1 text-xs text-neutral-500">Crea la página con secciones base (editable después).</div>
-              </div>
-
-              <div>
-                <label className="text-xs text-neutral-400">Slug</label>
-                <input
-                  className="mt-2 w-full rounded-xl border border-neutral-800 bg-black/30 px-3 py-2 text-sm"
-                  value={slug}
-                  onChange={(e) => setSlug(e.target.value)}
-                  placeholder="ej: sistema-de-restaurantes"
-                />
-                <div className="mt-1 text-xs text-neutral-500">
-                  Se convertirá a: <span className="text-neutral-300">{slugify(slug) || "—"}</span>
+              <div className="px-6 pt-5 md:px-8">
+                <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                  {formErr}
                 </div>
               </div>
+            ) : null}
 
-              <div>
-                <label className="text-xs text-neutral-400">Meta Title</label>
-                <input
-                  className="mt-2 w-full rounded-xl border border-neutral-800 bg-black/30 px-3 py-2 text-sm"
-                  value={metaTitle}
-                  onChange={(e) => setMetaTitle(e.target.value)}
-                />
+            {/* Body */}
+            <div className="max-h-[75vh] overflow-y-auto px-6 py-5 md:px-8">
+              <div className="space-y-6">
+                {/* Bloque base */}
+                <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 md:p-5">
+                  <div className="mb-4">
+                    <h3 className="text-sm font-semibold text-white">Configuración base</h3>
+                    <p className="mt-1 text-xs text-neutral-500">
+                      Define la plantilla inicial y el estado de publicación.
+                    </p>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-neutral-400">
+                        Plantilla
+                      </label>
+<select
+  className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-neutral-500 focus:border-white/20 focus:bg-black/40"
+  value={template}
+  onChange={(e) => setTemplate(e.target.value as PageTemplateKey)}
+>
+  {PAGE_TEMPLATE_OPTIONS.map((option) => (
+    <option key={option.value} value={option.value}>
+      {option.label}
+    </option>
+  ))}
+</select>
+                      <p className="mt-2 text-xs text-neutral-500">
+                        Crea la página con secciones base, editable después.
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-neutral-400">
+                        Status
+                      </label>
+                      <select
+                        className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-white/20 focus:bg-black/40"
+                        value={createStatus}
+                        onChange={(e) => setCreateStatus(e.target.value)}
+                      >
+                        <option value="draft">draft</option>
+                        <option value="published">published</option>
+                      </select>
+                      <p className="mt-2 text-xs text-neutral-500">
+                        Recomendado: crear en draft y publicar al finalizar.
+                      </p>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Identidad */}
+                <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 md:p-5">
+                  <div className="mb-4">
+                    <h3 className="text-sm font-semibold text-white">Identidad de la página</h3>
+                    <p className="mt-1 text-xs text-neutral-500">
+                      Estos campos definen la ruta y el título principal SEO.
+                    </p>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-neutral-400">
+                        Slug
+                      </label>
+                      <input
+                        className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-neutral-500 focus:border-white/20 focus:bg-black/40"
+                        value={slug}
+                        onChange={(e) => setSlug(e.target.value)}
+                        placeholder="ej: resto"
+                      />
+                      <p className="mt-2 text-xs text-neutral-500">
+                        Se convertirá a:{" "}
+                        <span className="font-medium text-neutral-300">{slugify(slug) || "—"}</span>
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-neutral-400">
+                        Meta Title
+                      </label>
+                      <input
+                        className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-neutral-500 focus:border-white/20 focus:bg-black/40"
+                        value={metaTitle}
+                        onChange={(e) => setMetaTitle(e.target.value)}
+                        placeholder="Ej: Sistema para restaurantes | ApiWorking"
+                      />
+                    </div>
+                  </div>
+                </section>
+
+                {/* SEO */}
+                <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 md:p-5">
+                  <div className="mb-4">
+                    <h3 className="text-sm font-semibold text-white">SEO y vista compartida</h3>
+                    <p className="mt-1 text-xs text-neutral-500">
+                      Mejora cómo se verá esta página en Google y al compartirla.
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-neutral-400">
+                        Meta Description
+                      </label>
+                      <textarea
+                        className="min-h-[120px] w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-neutral-500 focus:border-white/20 focus:bg-black/40"
+                        rows={4}
+                        value={metaDescription}
+                        onChange={(e) => setMetaDescription(e.target.value)}
+                        placeholder="Describe brevemente el contenido y propósito de la página."
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-neutral-400">
+                        OG Image <span className="normal-case text-neutral-500">(opcional)</span>
+                      </label>
+                      <input
+                        className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-neutral-500 focus:border-white/20 focus:bg-black/40"
+                        value={ogImage}
+                        onChange={(e) => setOgImage(e.target.value)}
+                        placeholder="https://..."
+                      />
+                    </div>
+                  </div>
+                </section>
               </div>
+            </div>
 
-              <div>
-                <label className="text-xs text-neutral-400">Meta Description</label>
-                <textarea
-                  className="mt-2 w-full rounded-xl border border-neutral-800 bg-black/30 px-3 py-2 text-sm"
-                  rows={3}
-                  value={metaDescription}
-                  onChange={(e) => setMetaDescription(e.target.value)}
-                />
-              </div>
-
-              <div>
-                <label className="text-xs text-neutral-400">OG Image (opcional)</label>
-                <input
-                  className="mt-2 w-full rounded-xl border border-neutral-800 bg-black/30 px-3 py-2 text-sm"
-                  value={ogImage}
-                  onChange={(e) => setOgImage(e.target.value)}
-                  placeholder="https://..."
-                />
-              </div>
-
-              <div>
-                <label className="text-xs text-neutral-400">Status</label>
-                <select
-                  className="mt-2 w-full rounded-xl border border-neutral-800 bg-black/30 px-3 py-2 text-sm"
-                  value={createStatus}
-                  onChange={(e) => setCreateStatus(e.target.value)}
-                >
-                  <option value="draft">draft</option>
-                  <option value="published">published</option>
-                </select>
-              </div>
-
-              <div className="flex gap-2 pt-2">
+            {/* Footer */}
+            <div className="border-t border-white/10 bg-white/[0.02] px-6 py-4 md:px-8">
+              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                 <button
-                  className="w-full rounded-xl border border-neutral-800 px-4 py-3 text-sm font-extrabold text-neutral-200 hover:bg-neutral-900/40"
+                  className="inline-flex items-center justify-center rounded-2xl border border-white/10 bg-transparent px-5 py-3 text-sm font-semibold text-neutral-300 transition hover:bg-white/[0.04] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
                   onClick={closeModal}
                   type="button"
                   disabled={creating}
                 >
                   Cancelar
                 </button>
+
                 <button
-                  className="w-full rounded-xl bg-white px-4 py-3 text-sm font-extrabold text-black disabled:opacity-50"
+                  className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-black transition hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-50"
                   onClick={onCreate}
                   disabled={creating}
                   type="button"
                 >
-                  {creating ? "Creando..." : "Crear"}
+                  {creating ? "Creando..." : "Crear página"}
                 </button>
               </div>
             </div>

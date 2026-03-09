@@ -14,11 +14,13 @@ import CtaSection from "@/components/sections/CtaSection";
 import CarouselLazy from "@/components/sections/CarouselLazy";
 import ProductsGridSection from "@/components/sections/ProductsGridSection";
 import HeroMediaSection from "@/components/sections/HeroMediaSection";
+import HeroCarouselSection from "@/components/sections/HeroCarouselSection";
 import CardsGridSection from "@/components/sections/CardsGridSection";
 import CtaSplitSection from "@/components/sections/CtaSplitSection";
 import PricingTabsSection from "@/components/sections/PricingTabsSection";
 import ContactFormSection from "@/components/sections/ContactFormSection";
 import ContactFormSplitSection from "@/components/sections/ContactFormSplitSection";
+
 export const componentByType: Record<string, React.ComponentType<{ data: any }>> = {
   hero: HeroSection,
   text: TextSection,
@@ -35,11 +37,13 @@ export const componentByType: Record<string, React.ComponentType<{ data: any }>>
   cta: CtaSection,
   productsGrid: ProductsGridSection,
   heroMedia: HeroMediaSection,
+  heroCarousel: HeroCarouselSection,
   cardsGrid: CardsGridSection,
-ctaSplit: CtaSplitSection,
-pricingTabs: PricingTabsSection,
-contactForm: ContactFormSection,
-contactFormSplit: ContactFormSplitSection,
+  ctaSplit: CtaSplitSection,
+  pricingTabs: PricingTabsSection,
+  contactForm: ContactFormSection,
+  contactFormSplit: ContactFormSplitSection,
+
   // pesado: client lazy
   carousel: CarouselLazy,
 };

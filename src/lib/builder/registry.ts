@@ -277,6 +277,33 @@ export const ctaSplitSchema = z.object({
     })
   ).min(1),
 });
+export const heroCarouselSchema = z.object({
+  autoplay: z.boolean().optional(),
+  interval: z.number().min(1000).max(20000).optional(),
+  pauseOnHover: z.boolean().optional(),
+  showDots: z.boolean().optional(),
+  showArrows: z.boolean().optional(),
+  height: z.enum(["sm", "md", "lg", "xl"]).optional(),
+  rounded: z.enum(["lg", "xl", "2xl", "3xl"]).optional(),
+
+  items: z.array(
+    z.object({
+      id: z.union([z.string(), z.number()]).optional(),
+      eyebrow: z.string().optional(),
+      title: z.string().min(1),
+      description: z.string().optional(),
+      image: z.string().min(1),
+      mobileImage: z.string().optional(),
+      imageAlt: z.string().optional(),
+      ctaText: z.string().optional(),
+      ctaHref: z.string().optional(),
+      overlay: z.boolean().optional(),
+      contentPosition: z.enum(["left", "center", "right"]).optional(),
+      theme: z.enum(["light", "dark"]).optional(),
+      accentColor: z.string().optional(),
+    })
+  ).min(1),
+});
 /* =========================
    Public mapping (IMPORTANT)
    ========================= */
@@ -304,4 +331,6 @@ contactForm: contactFormSchema,
 contactFormSplit: contactFormSplitSchema,
   // ✅ agrega esto
   productsGrid: ProductsGridSchema,
+    heroCarousel: heroCarouselSchema,
+
 };

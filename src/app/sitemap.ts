@@ -12,7 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // ✅ Páginas estáticas (las que ya tenías)
   const pages = [
     { path: "/", changeFreq: "weekly" as const, priority: 1.0 },
-    { path: "/sistema-de-restaurantes", changeFreq: "weekly" as const, priority: 0.9 },
+    { path: "/resto", changeFreq: "weekly" as const, priority: 0.9 },
     { path: "/sistema-para-hoteles", changeFreq: "weekly" as const, priority: 0.9 },
     { path: "/contacto", changeFreq: "monthly" as const, priority: 0.7 },
     { path: "/demo", changeFreq: "monthly" as const, priority: 0.7 },

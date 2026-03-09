@@ -13,7 +13,7 @@ export async function GET(
       metaDescription: "Soluciones editables por módulos: texto, video, carrusel, pricing, FAQ y más.",
       ogImage: "https://picsum.photos/1200/630",
       sections: [
-        { id: "h1", type: "hero", data: { title: "ApiWorking", subtitle: "XD", ctaText: "Ver restaurantes", ctaHref: "/sistema-de-restaurantes" } },
+        { id: "h1", type: "hero", data: { title: "ApiWorking", subtitle: "XD", ctaText: "Ver restaurantes", ctaHref: "/resto" } },
 
         { id: "h2", type: "features", data: { title: "Beneficios", subtitle: "Módulos editables sin tocar código", items: [
           { title: "Rápido", text: "SSR + módulos ligeros.", icon: "⚡" },
@@ -68,8 +68,8 @@ export async function GET(
       ],
     },
 
-    "sistema-de-restaurantes": {
-      slug: "sistema-de-restaurantes",
+    "resto": {
+      slug: "resto",
       metaTitle: "Sistema de Restaurantes | ApiWorking",
       metaDescription: "Controla ventas, mesas, comandas y pagos con ApiWorking.",
       ogImage: "https://picsum.photos/1200/630",

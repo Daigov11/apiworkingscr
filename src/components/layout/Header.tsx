@@ -25,7 +25,7 @@ export default function Header() {
         </a>
 
         <nav className="awcmr-header__nav">
-          <a href="/sistema-de-restaurantes" className="awcmr-header__link">Restaurantes</a>
+          <a href="/resto" className="awcmr-header__link">Restaurantes</a>
           <a href="/sistema-para-hoteles" className="awcmr-header__link">Hoteles</a>
           <a href="/contacto" className="awcmr-header__link">Contacto XD</a>
         </nav>
@@ -53,7 +53,7 @@ export default function Header() {
         className={`awcmr-header__mobilePanel ${isOpen ? "is-open" : ""}`}
       >
         <div className="awcmr-header__mobileInner">
-          <a href="/sistema-de-restaurantes" className="awcmr-header__mobileLink" onClick={closeMenu}>
+          <a href="/resto" className="awcmr-header__mobileLink" onClick={closeMenu}>
             Restaurantes
           </a>
           <a href="/sistema-para-hoteles" className="awcmr-header__mobileLink" onClick={closeMenu}>

@@ -267,6 +267,7 @@ export default function SectionForm({ type, dataJson, onChangeDataJson }: Props)
     "pricing",
     "productsgrid",
     "heromedia",
+      "herocarousel",
     "cardsgrid",
 "ctasplit",
 "pricingtabs",
@@ -332,8 +333,9 @@ useEffect(() => {
 
   // resto igual que tenías
   let keyName: string | null = null;
-  if (["features", "stats", "faq", "testimonials", "carousel"].includes(t)) keyName = "items";
-  if (t === "logos") keyName = "logos";
+if (["features", "stats", "faq", "testimonials", "carousel", "herocarousel"].includes(t)) {
+  keyName = "items";
+}  if (t === "logos") keyName = "logos";
   if (t === "pricing") keyName = "plans";
 
   if (!keyName) return;
@@ -1016,7 +1018,187 @@ useEffect(() => {
               />
             </>
           ) : null}
+{/* HEROCAROUSEL */}
+{t === "herocarousel" ? (
+  <>
+    <div className="grid gap-3 md:grid-cols-2">
+      <div>
+        <label className="text-xs text-neutral-400">Altura</label>
+        <select
+          className="mt-2 w-full rounded-xl border border-neutral-800 bg-black/30 px-3 py-2 text-sm text-neutral-200"
+          value={String((parsed as any)?.height ?? "lg")}
+          onChange={(e) => setField("height", e.target.value)}
+        >
+          <option value="sm">sm</option>
+          <option value="md">md</option>
+          <option value="lg">lg</option>
+          <option value="xl">xl</option>
+        </select>
+      </div>
 
+      <div>
+        <label className="text-xs text-neutral-400">Borde redondeado</label>
+        <select
+          className="mt-2 w-full rounded-xl border border-neutral-800 bg-black/30 px-3 py-2 text-sm text-neutral-200"
+          value={String((parsed as any)?.rounded ?? "xl")}
+          onChange={(e) => setField("rounded", e.target.value)}
+        >
+          <option value="lg">lg</option>
+          <option value="xl">xl</option>
+          <option value="2xl">2xl</option>
+          <option value="3xl">3xl</option>
+        </select>
+      </div>
+    </div>
+
+    <div className="grid gap-3 md:grid-cols-2">
+      <FieldNumber
+        label="Intervalo autoplay (ms)"
+        value={String((parsed as any)?.interval ?? 5000)}
+        onChange={(v) => setField("interval", Number(v))}
+      />
+
+      <div className="grid gap-3">
+        <FieldSwitch
+          label="Autoplay"
+          checked={(parsed as any)?.autoplay !== false}
+          onChange={(v) => setField("autoplay", v)}
+        />
+        <FieldSwitch
+          label="Pausar al hover"
+          checked={(parsed as any)?.pauseOnHover !== false}
+          onChange={(v) => setField("pauseOnHover", v)}
+        />
+      </div>
+    </div>
+
+    <div className="grid gap-3 md:grid-cols-2">
+      <FieldSwitch
+        label="Mostrar dots"
+        checked={(parsed as any)?.showDots !== false}
+        onChange={(v) => setField("showDots", v)}
+      />
+      <FieldSwitch
+        label="Mostrar flechas"
+        checked={(parsed as any)?.showArrows !== false}
+        onChange={(v) => setField("showArrows", v)}
+      />
+    </div>
+
+    <SortableList
+      title="Slides del Hero Carousel"
+      items={getArray("items")}
+      onItemsChange={(next) => setArray("items", next)}
+      createItem={() => ({
+        __key: genKey("items"),
+        eyebrow: "",
+        title: "",
+        description: "",
+        image: "",
+        mobileImage: "",
+        imageAlt: "",
+        ctaText: "Ver más",
+        ctaHref: "",
+        overlay: true,
+        contentPosition: "left",
+        theme: "dark",
+        accentColor: "#ec4899",
+      })}
+      renderFields={(item, patch) => (
+        <>
+          <FieldText
+            label="Eyebrow (opcional)"
+            value={item?.eyebrow ?? ""}
+            onChange={(v) => patch({ eyebrow: v })}
+          />
+
+          <FieldText
+            label="Título"
+            value={item?.title ?? ""}
+            onChange={(v) => patch({ title: v })}
+          />
+
+          <FieldTextarea
+            label="Descripción (opcional)"
+            value={item?.description ?? ""}
+            onChange={(v) => patch({ description: v })}
+          />
+
+          <div className="grid gap-3 md:grid-cols-2">
+            <FieldText
+              label="Imagen desktop"
+              value={item?.image ?? ""}
+              onChange={(v) => patch({ image: v })}
+            />
+            <FieldText
+              label="Imagen mobile (opcional)"
+              value={item?.mobileImage ?? ""}
+              onChange={(v) => patch({ mobileImage: v })}
+            />
+          </div>
+
+          <FieldText
+            label="Alt imagen (opcional)"
+            value={item?.imageAlt ?? ""}
+            onChange={(v) => patch({ imageAlt: v })}
+          />
+
+          <div className="grid gap-3 md:grid-cols-2">
+            <FieldText
+              label="Texto botón"
+              value={item?.ctaText ?? ""}
+              onChange={(v) => patch({ ctaText: v })}
+            />
+            <FieldText
+              label="Link botón"
+              value={item?.ctaHref ?? ""}
+              onChange={(v) => patch({ ctaHref: v })}
+            />
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-3">
+            <div>
+              <label className="text-xs text-neutral-400">Posición contenido</label>
+              <select
+                className="mt-2 w-full rounded-xl border border-neutral-800 bg-black/30 px-3 py-2 text-sm text-neutral-200"
+                value={String(item?.contentPosition ?? "left")}
+                onChange={(e) => patch({ contentPosition: e.target.value })}
+              >
+                <option value="left">left</option>
+                <option value="center">center</option>
+                <option value="right">right</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="text-xs text-neutral-400">Theme</label>
+              <select
+                className="mt-2 w-full rounded-xl border border-neutral-800 bg-black/30 px-3 py-2 text-sm text-neutral-200"
+                value={String(item?.theme ?? "dark")}
+                onChange={(e) => patch({ theme: e.target.value })}
+              >
+                <option value="dark">dark</option>
+                <option value="light">light</option>
+              </select>
+            </div>
+
+            <FieldText
+              label="Color botón (hex)"
+              value={item?.accentColor ?? ""}
+              onChange={(v) => patch({ accentColor: v })}
+            />
+          </div>
+
+          <FieldSwitch
+            label="Overlay"
+            checked={item?.overlay !== false}
+            onChange={(v) => patch({ overlay: v })}
+          />
+        </>
+      )}
+    />
+  </>
+) : null}
           {/* PRICING (DnD planes) */}
           {t === "pricing" ? (
             <>

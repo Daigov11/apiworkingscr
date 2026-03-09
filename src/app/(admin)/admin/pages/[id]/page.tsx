@@ -546,6 +546,7 @@ const SECTION_META: Record<string, { icon: string; label: string }> = {
   spacer:          { icon: "↕", label: "Spacer" },
   cta:             { icon: "📣", label: "CTA" },
   heroMedia:       { icon: "🎬", label: "Hero Media" },
+  herocarousel:       { icon: "▶️🎬", label: "Hero Carrusel" },
   productsGrid:    { icon: "🛒", label: "Productos" },
   cardsGrid:       { icon: "▦", label: "Cards Grid" },
   ctaSplit:        { icon: "⚡", label: "CTA Split" },
@@ -666,7 +667,7 @@ export default function AdminPageEditor() {
 
   const sectionTypes = useMemo(() => [
     "hero","text","imageText","videoText","features","stats","logos","faq",
-    "testimonials","pricing","carousel","divider","spacer","cta","heroMedia",
+    "testimonials","pricing","carousel","divider","spacer","cta","heroMedia","heroCarousel",
     "productsGrid","cardsGrid","ctaSplit","pricingTabs","contactForm","contactFormSplit",
   ], []);
 
