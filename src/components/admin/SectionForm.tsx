@@ -613,16 +613,59 @@ useEffect(() => {
             </>
           ) : null}
 
-          {/* VIDEOTEXT */}
-          {t === "videotext" ? (
-            <>
-              <FieldText label="Título (opcional)" value={(parsed as any)?.title ?? ""} onChange={(v) => setField("title", v)} />
-              <FieldTextarea label="Texto" value={(parsed as any)?.text ?? ""} onChange={(v) => setField("text", v)} />
-              <FieldText label="URL embed del video" value={(parsed as any)?.videoUrl ?? ""} onChange={(v) => setField("videoUrl", v)} />
-              <FieldSwitch label="Invertir columnas (reverse)" checked={!!(parsed as any)?.reverse} onChange={(v) => setField("reverse", v)} />
-            </>
-          ) : null}
+{/* VIDEOTEXT */}
+{t === "videotext" ? (
+  <>
+    <div className="grid gap-3 md:grid-cols-2">
+      <div>
+        <label className="text-xs text-neutral-400">Layout</label>
+        <select
+          className="mt-2 w-full rounded-xl border border-neutral-800 bg-black/30 px-3 py-2 text-sm text-neutral-200"
+          value={String((parsed as any)?.layout ?? "split")}
+          onChange={(e) => setField("layout", e.target.value)}
+        >
+          <option value="split">split</option>
+          <option value="stacked">stacked</option>
+        </select>
+      </div>
 
+      <div>
+        <label className="text-xs text-neutral-400">Alineación de texto</label>
+        <select
+          className="mt-2 w-full rounded-xl border border-neutral-800 bg-black/30 px-3 py-2 text-sm text-neutral-200"
+          value={String((parsed as any)?.textAlign ?? "left")}
+          onChange={(e) => setField("textAlign", e.target.value)}
+        >
+          <option value="left">left</option>
+          <option value="center">center</option>
+        </select>
+      </div>
+    </div>
+
+    <FieldText label="Badge / Eyebrow (opcional)" value={(parsed as any)?.badge ?? ""} onChange={(v) => setField("badge", v)} />
+    <FieldText label="Título (opcional)" value={(parsed as any)?.title ?? ""} onChange={(v) => setField("title", v)} />
+    <FieldTextarea label="Subtítulo (opcional)" value={(parsed as any)?.subtitle ?? ""} onChange={(v) => setField("subtitle", v)} />
+    <FieldTextarea label="Texto adicional (opcional)" value={(parsed as any)?.text ?? ""} onChange={(v) => setField("text", v)} />
+    <FieldText
+      label="Video de YouTube (ID, embed o URL)"
+      value={(parsed as any)?.videoUrl ?? ""}
+      onChange={(v) => setField("videoUrl", v)}
+    />
+
+    {String((parsed as any)?.layout ?? "split") === "split" ? (
+      <FieldSwitch
+        label="Invertir columnas (reverse)"
+        checked={!!(parsed as any)?.reverse}
+        onChange={(v) => setField("reverse", v)}
+      />
+    ) : null}
+
+    <div className="grid gap-3 md:grid-cols-2">
+      <FieldText label="Texto botón (opcional)" value={(parsed as any)?.ctaText ?? ""} onChange={(v) => setField("ctaText", v)} />
+      <FieldText label="Link botón (opcional)" value={(parsed as any)?.ctaHref ?? ""} onChange={(v) => setField("ctaHref", v)} />
+    </div>
+  </>
+) : null}
 {/* PRODUCTSGRID */}
 {t === "productsgrid" ? (
   <>

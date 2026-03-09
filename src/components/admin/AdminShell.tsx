@@ -11,10 +11,212 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(href + "/");
 }
 
+/* ─────────────────────────────────────────
+   STYLES
+───────────────────────────────────────── */
+const BASE_STYLES = `
+  @import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap');
+
+  .aw-admin, .aw-admin * {
+    box-sizing: border-box;
+    font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  /* ── TOPBAR ── */
+  .aw-topbar {
+    height: 52px;
+    background: #fff;
+    border-bottom: 1px solid #e7e5e4;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    flex-shrink: 0;
+  }
+  .aw-topbar-left { display: flex; align-items: center; gap: 10px; }
+  .aw-topbar-right { display: flex; align-items: center; gap: 8px; }
+
+  /* Brand */
+  .aw-brand { display: flex; align-items: center; gap: 8px; }
+  .aw-brand-logo {
+    width: 28px; height: 28px;
+    border-radius: 7px;
+    background: #18181b;
+    color: #fff;
+    font-size: 13px; font-weight: 700;
+    display: grid; place-items: center;
+    flex-shrink: 0;
+    letter-spacing: -0.02em;
+  }
+  .aw-brand-name { font-size: 14px; font-weight: 600; color: #1c1917; letter-spacing: -0.02em; }
+  .aw-brand-sep  { color: #d4d0cb; font-size: 16px; margin: 0 -2px; }
+  .aw-brand-section { font-size: 13px; font-weight: 500; color: #78716c; }
+
+  /* Icon btn */
+  .aw-icon-btn {
+    width: 32px; height: 32px;
+    display: grid; place-items: center;
+    border-radius: 7px;
+    border: 1px solid #e7e5e4;
+    background: transparent;
+    color: #57534e;
+    cursor: pointer;
+    transition: background .12s, color .12s;
+  }
+  .aw-icon-btn:hover { background: #f5f5f4; color: #1c1917; }
+
+  /* ── SIDEBAR ── */
+  .aw-sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    background: #fff;
+    border-right: 1px solid #e7e5e4;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 52px);
+    position: sticky;
+    top: 52px;
+    overflow-y: auto;
+    scrollbar-width: none;
+    transition: width .18s ease;
+  }
+  .aw-sidebar::-webkit-scrollbar { display: none; }
+  .aw-sidebar--collapsed { width: 60px; }
+
+  /* ── NAV ── */
+  .aw-nav { padding: 12px 10px; flex: 1; }
+
+  .aw-nav-label {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: #a8a29e;
+    padding: 4px 8px 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    min-height: 28px;
+  }
+
+  .aw-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 8px;
+    border-radius: 7px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: #44403c;
+    text-decoration: none;
+    transition: background .1s, color .1s;
+    white-space: nowrap;
+    overflow: hidden;
+    margin-bottom: 1px;
+    position: relative;
+  }
+  .aw-nav-link:hover { background: #f5f5f4; color: #1c1917; }
+  .aw-nav-link--active {
+    background: #f5f5f4;
+    color: #1c1917;
+    font-weight: 600;
+  }
+  .aw-nav-link--active::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 20%; bottom: 20%;
+    width: 3px;
+    background: #18181b;
+    border-radius: 0 3px 3px 0;
+  }
+
+  .aw-nav-icon { font-size: 15px; flex-shrink: 0; width: 20px; text-align: center; }
+  .aw-nav-text { flex: 1; }
+
+  .aw-nav-badge {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .03em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: #f5f5f4;
+    border: 1px solid #e7e5e4;
+    color: #a8a29e;
+    white-space: nowrap;
+  }
+
+  /* Collapse button */
+  .aw-collapse-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 12px;
+    border: none;
+    border-top: 1px solid #f5f5f4;
+    background: transparent;
+    color: #a8a29e;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    transition: color .12s, background .12s;
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    font-family: inherit;
+  }
+  .aw-collapse-btn:hover { background: #f5f5f4; color: #57534e; }
+
+  /* ── MAIN ── */
+  .aw-main {
+    flex: 1;
+    padding: 28px 32px;
+    overflow: auto;
+    min-width: 0;
+    background: #f5f5f4;
+  }
+
+  /* ── MOBILE DRAWER ── */
+  .aw-drawer-overlay {
+    position: fixed; inset: 0; z-index: 50;
+  }
+  .aw-drawer-scrim {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,.35);
+    backdrop-filter: blur(2px);
+    border: none; cursor: pointer; width: 100%; height: 100%;
+  }
+  .aw-drawer {
+    position: absolute; left: 0; top: 0;
+    width: 260px; height: 100%;
+    background: #fff;
+    border-right: 1px solid #e7e5e4;
+    display: flex; flex-direction: column;
+  }
+  .aw-drawer-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid #f5f5f4;
+  }
+
+  /* ── UTILS ── */
+  .aw-mobile-only { display: grid; }
+
+  @media (min-width: 768px) {
+    .aw-mobile-only { display: none !important; }
+  }
+  @media (max-width: 767px) {
+    .aw-sidebar-desktop { display: none !important; }
+    .aw-main { padding: 20px 16px; }
+  }
+`;
+
 export default function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  // ✅ Hooks SIEMPRE arriba (no condicional)
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
@@ -30,132 +232,129 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
   const isLogin = pathname === "/admin/login";
 
-  // ✅ Login sin sidebar (pero hooks ya fueron llamados)
   if (isLogin) {
     return (
-      <div className="aw-admin min-h-screen bg-slate-50 text-slate-900">
+      <div className="aw-admin" style={{ minHeight: "100vh", background: "#f5f5f4", color: "#1c1917" }}>
+        <style>{BASE_STYLES}</style>
         {children}
       </div>
     );
   }
 
   const Layout = (
-    <div className="aw-admin min-h-screen bg-slate-50 text-slate-900">
-      {/* Topbar */}
-      <div className="sticky top-0 z-40 border-b border-slate-200 bg-white/80 backdrop-blur">
-        <div className="mx-auto flex max-w-[1400px] items-center gap-3 px-4 py-3">
+    <div className="aw-admin" style={{ minHeight: "100vh", background: "#f5f5f4", color: "#1c1917", display: "flex", flexDirection: "column" }}>
+      <style>{BASE_STYLES}</style>
+
+      {/* ── TOP BAR ── */}
+      <header className="aw-topbar">
+        <div className="aw-topbar-left">
+          {/* Hamburger — mobile only */}
           <button
             type="button"
-            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm md:hidden"
+            className="aw-icon-btn aw-mobile-only"
             onClick={() => setMobileOpen(true)}
             aria-label="Abrir menú"
           >
-            ☰
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <rect y="2"    width="16" height="1.5" rx=".75" fill="currentColor"/>
+              <rect y="7.25" width="16" height="1.5" rx=".75" fill="currentColor"/>
+              <rect y="12.5" width="16" height="1.5" rx=".75" fill="currentColor"/>
+            </svg>
           </button>
 
-          <div className="w-full">
-            <AdminTopbar />
+          {/* Brand */}
+          <div className="aw-brand">
+            <div className="aw-brand-logo">A</div>
+            <span className="aw-brand-name">ApiWorking</span>
+            <span className="aw-brand-sep">/</span>
+            <span className="aw-brand-section">CMS</span>
           </div>
         </div>
-      </div>
 
-      <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-4 px-4 py-4 md:grid-cols-[auto_1fr]">
-        {/* Sidebar desktop */}
+        <div className="aw-topbar-right">
+          <AdminTopbar />
+        </div>
+      </header>
+
+      {/* ── BODY ── */}
+      <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+
+        {/* ── SIDEBAR desktop ── */}
         <aside
-          className={[
-            "hidden md:block",
-            "sticky top-[72px] h-[calc(100vh-88px)] overflow-auto",
-            "rounded-2xl border border-slate-200 bg-white shadow-sm",
-            collapsed ? "w-[84px]" : "w-[280px]",
-          ].join(" ")}
+          className={`aw-sidebar aw-sidebar-desktop${collapsed ? " aw-sidebar--collapsed" : ""}`}
         >
-          <div className="flex items-center justify-between gap-2 p-3">
-            <div className="flex items-center gap-2">
-              <div className="grid h-9 w-9 place-items-center rounded-xl bg-indigo-600 text-white font-extrabold">
-                A
-              </div>
-              {!collapsed ? (
-                <div>
-                  <div className="text-sm font-extrabold">ApiWorking</div>
-                  <div className="text-xs text-slate-500">CMS Admin</div>
-                </div>
-              ) : null}
-            </div>
+          <nav className="aw-nav">
+            {!collapsed && <div className="aw-nav-label">Contenido</div>}
+            {nav.map((it) => {
+              const active = isActive(pathname, it.href);
+              return (
+                <a
+                  key={it.href}
+                  href={it.href}
+                  className={`aw-nav-link${active ? " aw-nav-link--active" : ""}`}
+                  title={collapsed ? it.label : undefined}
+                >
+                  <span className="aw-nav-icon">{it.icon}</span>
+                  {!collapsed && <span className="aw-nav-text">{it.label}</span>}
+                  {!collapsed && it.badge && (
+                    <span className="aw-nav-badge">{it.badge}</span>
+                  )}
+                </a>
+              );
+            })}
+          </nav>
 
-            <button
-              type="button"
-              className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-600 hover:bg-slate-50"
-              onClick={() => setCollapsed((v) => !v)}
-              title={collapsed ? "Expandir" : "Colapsar"}
+          <button
+            type="button"
+            className="aw-collapse-btn"
+            onClick={() => setCollapsed((v) => !v)}
+            title={collapsed ? "Expandir" : "Colapsar"}
+          >
+            <svg
+              width="14" height="14" viewBox="0 0 14 14" fill="none"
+              style={{ transform: collapsed ? "rotate(180deg)" : "none", transition: "transform .2s", flexShrink: 0 }}
             >
-              {collapsed ? "›" : "‹"}
-            </button>
-          </div>
-
-          <div className="px-3 pb-3">
-            {!collapsed ? (
-              <div className="px-2 py-2 text-xs font-bold text-slate-500">
-                Navegación
-              </div>
-            ) : null}
-
-            <nav className="mt-1 space-y-1">
-              {nav.map((it) => {
-                const active = isActive(pathname, it.href);
-                return (
-                  <a
-                    key={it.href}
-                    href={it.href}
-                    className={[
-                      "flex items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm",
-                      active ? "bg-indigo-50 text-indigo-700" : "text-slate-700 hover:bg-slate-50",
-                    ].join(" ")}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-lg leading-none">{it.icon}</span>
-                      {!collapsed ? <span className="font-medium">{it.label}</span> : null}
-                    </div>
-
-                    {!collapsed && it.badge ? (
-                      <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] text-slate-500">
-                        {it.badge}
-                      </span>
-                    ) : null}
-                  </a>
-                );
-              })}
-            </nav>
-          </div>
+              <path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            {!collapsed && <span>Colapsar</span>}
+          </button>
         </aside>
 
-        {/* Content */}
-        <main className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:p-6">
+        {/* ── MAIN CONTENT ── */}
+        <main className="aw-main">
           {children}
         </main>
       </div>
 
-      {/* Sidebar mobile drawer */}
-      {mobileOpen ? (
-        <div className="fixed inset-0 z-50 md:hidden">
+      {/* ── MOBILE DRAWER ── */}
+      {mobileOpen && (
+        <div className="aw-drawer-overlay">
           <button
             type="button"
-            className="absolute inset-0 bg-black/40"
+            className="aw-drawer-scrim"
             onClick={() => setMobileOpen(false)}
             aria-label="Cerrar menú"
           />
-          <div className="absolute left-0 top-0 h-full w-[300px] border-r border-slate-200 bg-white p-4">
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-extrabold">Panel</div>
+          <aside className="aw-drawer">
+            <div className="aw-drawer-head">
+              <div className="aw-brand">
+                <div className="aw-brand-logo">A</div>
+                <span className="aw-brand-name">ApiWorking</span>
+              </div>
               <button
                 type="button"
-                className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm"
+                className="aw-icon-btn"
                 onClick={() => setMobileOpen(false)}
+                aria-label="Cerrar"
               >
-                ✕
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
               </button>
             </div>
 
-            <nav className="mt-4 space-y-1">
+            <nav className="aw-nav">
+              <div className="aw-nav-label">Contenido</div>
               {nav.map((it) => {
                 const active = isActive(pathname, it.href);
                 return (
@@ -163,27 +362,18 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                     key={it.href}
                     href={it.href}
                     onClick={() => setMobileOpen(false)}
-                    className={[
-                      "flex items-center justify-between rounded-xl px-3 py-2 text-sm",
-                      active ? "bg-indigo-50 text-indigo-700" : "text-slate-700 hover:bg-slate-50",
-                    ].join(" ")}
+                    className={`aw-nav-link${active ? " aw-nav-link--active" : ""}`}
                   >
-                    <div className="flex items-center gap-3">
-                      <span className="text-lg leading-none">{it.icon}</span>
-                      <span className="font-medium">{it.label}</span>
-                    </div>
-                    {it.badge ? (
-                      <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] text-slate-500">
-                        {it.badge}
-                      </span>
-                    ) : null}
+                    <span className="aw-nav-icon">{it.icon}</span>
+                    <span className="aw-nav-text">{it.label}</span>
+                    {it.badge && <span className="aw-nav-badge">{it.badge}</span>}
                   </a>
                 );
               })}
             </nav>
-          </div>
+          </aside>
         </div>
-      ) : null}
+      )}
     </div>
   );
 

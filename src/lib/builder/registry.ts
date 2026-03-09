@@ -25,10 +25,16 @@ export const imageTextSchema = z.object({
 });
 
 export const videoTextSchema = z.object({
+  badge: z.string().optional(),
   title: z.string().optional(),
-  text: z.string().min(1),
+  subtitle: z.string().optional(),
+  text: z.string().optional(),
   videoUrl: z.string().min(1),
+  layout: z.enum(["split", "stacked"]).optional(),
   reverse: z.boolean().optional(),
+  textAlign: z.enum(["left", "center"]).optional(),
+  ctaText: z.string().optional(),
+  ctaHref: z.string().optional(),
 });
 
 export const featuresSchema = z.object({
