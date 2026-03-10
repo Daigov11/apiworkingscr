@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { CatalogCategory, CatalogProduct } from "@/lib/catalog/types";
 import {
@@ -28,6 +28,14 @@ function slugify(input: string) {
 }
 
 export default function AdminCatalogProductsPage() {
+  return (
+    <Suspense fallback={<div className="text-slate-500">Cargando...</div>}>
+      <AdminCatalogProductsInner />
+    </Suspense>
+  );
+}
+
+function AdminCatalogProductsInner() {
   var router = useRouter();
   var pathname = usePathname();
   var sp = useSearchParams();

@@ -140,7 +140,8 @@ export default function AdminCatalogProductEdit({ params }: { params: { id: stri
   // cuando ya tengo categorías + product.categorySlug, intento setear categoryId
   useEffect(() => {
     if (!product || !cats.length) return;
-    var match = cats.find((c) => c.slug === product.categorySlug);
+    const p = product;
+    var match = cats.find((c) => c.slug === p.categorySlug);
     if (match) setCategoryId(match.id);
     else setCategoryId(cats[0]?.id ?? null);
   }, [product, cats]);
