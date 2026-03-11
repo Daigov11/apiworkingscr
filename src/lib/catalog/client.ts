@@ -1,5 +1,6 @@
 import type { CatalogCategory, CatalogPlan, CatalogProduct, ListProductsArgs, ListProductsResult } from "@/lib/catalog/types";
 import { mockGetProductBySlug, mockListCategories, mockListProducts } from "@/lib/mock/catalogMock";
+import { withBd } from "@/lib/api/bd";
 
 type AuthMode = "none" | "auto" | "required";
 
@@ -53,7 +54,7 @@ function buildHeaders(initHeaders?: HeadersInit, authMode: AuthMode = "auto"): H
 async function fetchRaw(url: string, init?: RequestInit, authMode: AuthMode = "auto"): Promise<Response> {
   var headers = buildHeaders(init?.headers, authMode);
 
-  return fetch(url, {
+  return fetch(withBd(url), {
     ...init,
     headers,
   });
@@ -63,7 +64,6 @@ async function fetchJson<T>(url: string, init?: RequestInit, authMode: AuthMode 
   var res = await fetchRaw(url, init, authMode);
 
   if (!res.ok) {
-    // intenta leer mensaje JSON si existe
     var text = "";
     try {
       var j = await res.json();
@@ -212,7 +212,6 @@ export async function getProductBySlug(slug: string): Promise<CatalogProduct | n
 
   var url = API_BASE + "/catalog/products/" + encodeURIComponent(slug);
 
-  // devolvemos null si 404
   var res = await fetchRaw(url, { method: "GET" }, "auto");
   if (res.status === 404) return null;
 

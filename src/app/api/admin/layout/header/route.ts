@@ -7,44 +7,38 @@ function remoteBase() {
   return base;
 }
 
-function buildPageUrl(req: Request, id: string) {
+function buildUrl(req: Request) {
   const base = remoteBase();
   const bd = getCurrentBd();
   const url = new URL(req.url);
 
   url.searchParams.set("bd", bd);
 
-  return `${base}/cms/admin/pages/${encodeURIComponent(id)}?${url.searchParams.toString()}`;
+  return `${base}/admin/layout/header?${url.searchParams.toString()}`;
 }
 
-export async function GET(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params;
+export async function GET(req: Request) {
   const auth = req.headers.get("authorization") || "";
 
-  const res = await fetch(buildPageUrl(req, id), {
+  const res = await fetch(buildUrl(req), {
     method: "GET",
     headers: { accept: "*/*", Authorization: auth },
+    cache: "no-store",
   });
 
   const text = await res.text();
+
   return new NextResponse(text, {
     status: res.status,
     headers: { "Content-Type": "application/json" },
   });
 }
 
-export async function PUT(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params;
+export async function PUT(req: Request) {
   const auth = req.headers.get("authorization") || "";
   const body = await req.text();
 
-  const res = await fetch(buildPageUrl(req, id), {
+  const res = await fetch(buildUrl(req), {
     method: "PUT",
     headers: {
       accept: "*/*",
@@ -55,25 +49,7 @@ export async function PUT(
   });
 
   const text = await res.text();
-  return new NextResponse(text, {
-    status: res.status,
-    headers: { "Content-Type": "application/json" },
-  });
-}
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params;
-  const auth = req.headers.get("authorization") || "";
-
-  const res = await fetch(buildPageUrl(req, id), {
-    method: "DELETE",
-    headers: { accept: "*/*", Authorization: auth },
-  });
-
-  const text = await res.text();
   return new NextResponse(text, {
     status: res.status,
     headers: { "Content-Type": "application/json" },

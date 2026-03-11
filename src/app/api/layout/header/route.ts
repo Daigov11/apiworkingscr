@@ -9,38 +9,20 @@ function remoteBase() {
 
 export async function GET(req: Request) {
   const base = remoteBase();
-  const url = new URL(req.url);
   const bd = getCurrentBd();
-
   const auth = req.headers.get("authorization") || "";
 
+  const url = new URL(req.url);
   url.searchParams.set("bd", bd);
 
-  const res = await fetch(`${base}/cms/admin/pages?${url.searchParams.toString()}`, {
+  const res = await fetch(`${base}/layout/header?${url.searchParams.toString()}`, {
     method: "GET",
     headers: { accept: "*/*", Authorization: auth },
+    cache: "no-store",
   });
 
   const text = await res.text();
-  return new NextResponse(text, {
-    status: res.status,
-    headers: { "Content-Type": "application/json" },
-  });
-}
 
-export async function POST(req: Request) {
-  const base = remoteBase();
-  const bd = getCurrentBd();
-  const auth = req.headers.get("authorization") || "";
-  const body = await req.text();
-
-  const res = await fetch(`${base}/cms/admin/pages?bd=${encodeURIComponent(bd)}`, {
-    method: "POST",
-    headers: { accept: "*/*", Authorization: auth, "Content-Type": "application/json" },
-    body,
-  });
-
-  const text = await res.text();
   return new NextResponse(text, {
     status: res.status,
     headers: { "Content-Type": "application/json" },

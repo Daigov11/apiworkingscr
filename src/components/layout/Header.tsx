@@ -1,81 +1,32 @@
-"use client";
+import HeaderClient, { type HeaderData } from "./HeaderClient";
 
-import React, { useEffect, useState } from "react";
+async function getHeaderData(): Promise<HeaderData> {
+  try {
+    const baseUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      "http://localhost:3000";
 
-export default function Header() {
-  let [isOpen, setIsOpen] = useState(false);
+    const res = await fetch(`${baseUrl}/api/layout/header`, {
+      method: "GET",
+      cache: "no-store",
+    });
 
-  useEffect(() => {
-    function onResize() {
-      if (window.innerWidth >= 768) setIsOpen(false);
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
     }
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
 
-  function closeMenu() {
-    setIsOpen(false);
+    return (await res.json()) as HeaderData;
+  } catch {
+    return {
+      logoUrl: null,
+      links: [],
+      cta: null,
+    };
   }
+}
 
-  return (
-    <header className="awcmr-header">
-      <div className="awcmr-header__inner">
-        <a href="/" className="awcmr-header__logo" onClick={closeMenu}>
-          ApiWorking
-        </a>
-
-        <nav className="awcmr-header__nav">
-          <a href="/resto" className="awcmr-header__link">Restaurantes</a>
-          <a href="/sistema-para-hoteles" className="awcmr-header__link">Hoteles</a>
-          <a href="/contacto" className="awcmr-header__link">Contacto XD</a>
-        </nav>
-
-        <div className="awcmr-header__actions">
-          <a href="/demo" className="awcmr-header__btnPrimary">Solicitar demo V1</a>
-        </div>
-
-        <button
-          type="button"
-          className="awcmr-header__burger"
-          aria-label={isOpen ? "Cerrar menú" : "Abrir menú"}
-          aria-expanded={isOpen}
-          aria-controls="awcmr-mobile-menu"
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          <span className="awcmr-header__burgerLine" />
-          <span className="awcmr-header__burgerLine" />
-          <span className="awcmr-header__burgerLine" />
-        </button>
-      </div>
-
-      <div
-        id="awcmr-mobile-menu"
-        className={`awcmr-header__mobilePanel ${isOpen ? "is-open" : ""}`}
-      >
-        <div className="awcmr-header__mobileInner">
-          <a href="/resto" className="awcmr-header__mobileLink" onClick={closeMenu}>
-            Restaurantes
-          </a>
-          <a href="/sistema-para-hoteles" className="awcmr-header__mobileLink" onClick={closeMenu}>
-            Hoteles
-          </a>
-          <a href="/contacto" className="awcmr-header__mobileLink" onClick={closeMenu}>
-            Contacto
-          </a>
-          <a href="/demo" className="awcmr-header__mobileBtn" onClick={closeMenu}>
-            Solicitar demo
-          </a>
-        </div>
-      </div>
-
-      {isOpen ? (
-        <button
-          type="button"
-          className="awcmr-header__backdrop"
-          aria-label="Cerrar menú"
-          onClick={closeMenu}
-        />
-      ) : null}
-    </header>
-  );
+export default async function Header() {
+  const data = await getHeaderData();
+  return <HeaderClient data={data} />;
 }

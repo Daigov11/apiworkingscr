@@ -220,16 +220,15 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
-  const nav: NavItem[] = useMemo(
-    () => [
-      { label: "Páginas", href: "/admin/pages", icon: "📄" },
-      { label: "Header & Footer", href: "/admin/layout", icon: "🧭", badge: "Pronto" },
-      { label: "Multimedia", href: "/admin/media", icon: "🖼️", badge: "Pronto" },
-      { label: "Ajustes", href: "/admin/settings", icon: "⚙️", badge: "Pronto" },
-    ],
-    []
-  );
-
+const nav: NavItem[] = useMemo(
+  () => [
+    { label: "Páginas", href: "/admin/pages", icon: "📄" },
+    { label: "Header & Footer", href: "/admin/layout", icon: "🧭" },
+    { label: "Multimedia", href: "/admin/media", icon: "🖼️", badge: "Pronto" },
+    { label: "Ajustes", href: "/admin/settings", icon: "⚙️", badge: "Pronto" },
+  ],
+  []
+);
   const isLogin = pathname === "/admin/login";
 
   if (isLogin) {
